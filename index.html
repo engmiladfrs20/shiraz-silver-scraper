@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قیمت نقره - شیراز طلا و نقره</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .info-bar {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f8f9fa;
+        }
+        
+        .info-item .label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .info-item .value {
+            color: #333;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+        
+        .prices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .price-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .price-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .price-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        
+        .price-card h3 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .price-row .label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .price-values {
+            text-align: left;
+        }
+        
+        .price-original {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+        
+        .price-new {
+            color: #27ae60;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .increase-badge {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .timestamp {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 15px;
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #666;
+        }
+        
+        .empty-state p {
+            color: #999;
+            font-size: 1.1em;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .not-configured {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .not-configured h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .not-configured p {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .setup-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .setup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💎 قیمت نقره - شیراز طلا و نقره</h1>
+            <p>بروزرسانی خودکار هر 30 دقیقه</p>
+        </div>
+        
+        {% if not is_configured %}
+            <div class="not-configured">
+                <h2>🔧 تنظیمات اولیه</h2>
+                <p>برای شروع، ابتدا باید تنظیمات را انجام دهید</p>
+                <a href="/setup" class="setup-btn">شروع تنظیمات</a>
+            </div>
+        {% else %}
+            <div class="info-bar">
+                <div class="info-item">
+                    <div class="label">آخرین بروزرسانی</div>
+                    <div class="value" id="lastUpdate">
+                        {% if last_update %}
+                            {{ last_update.split('T')[1].split('.')[0] }}
+                        {% else %}
+                            هنوز بروز نشده
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="label">درصد افزایش</div>
+                    <div class="value">{{ increase_percentage }}%</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">تعداد محصولات</div>
+                    <div class="value">{{ prices|length }}</div>
+                </div>
+                <div class="info-item">
+                    <button class="refresh-btn" onclick="refreshPrices()">
+                        🔄 بروزرسانی
+                    </button>
+                </div>
+            </div>
+            
+            {% if prices %}
+                <div class="prices-grid">
+                    {% for item in prices %}
+                    <div class="price-card">
+                        <h3>{{ item.name }}</h3>
+                        
+                        <div class="price-row">
+                            <span class="label">قیمت خرید:</span>
+                            <div class="price-values">
+                                <div class="price-original">{{ "{:,}".format(item.buy_price_original) }} تومان</div>
+                                <div class="price-new">{{ "{:,}".format(item.buy_price) }} تومان</div>
+                            </div>
+                        </div>
+                        
+                        <div class="price-row">
+                            <span class="label">قیمت فروش:</span>
+                            <div class="price-values">
+                                <div class="price-original">{{ "{:,}".format(item.sell_price_original) }} تومان</div>
+                                <div class="price-new">{{ "{:,}".format(item.sell_price) }} تومان</div>
+                            </div>
+                        </div>
+                        
+                        <div class="increase-badge">
+                            افزایش: +{{ "%.1f"|format(item.increase_percentage) }}%
+                        </div>
+                        
+                        <div class="timestamp">
+                            {{ item.unit if item.unit else '' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h2>📭 هنوز قیمتی دریافت نشده</h2>
+                    <p>لطفاً چند دقیقه صبر کنید یا دکمه بروزرسانی را بزنید</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+    
+    <script>
+        async function refreshPrices() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> در حال بروزرسانی...';
+            
+            try {
+                const response = await fetch('/api/refresh');
+                const data = await response.json();
+                
+                if (data.success) {
+                    setTimeout(() => location.reload(), 3000);
+                } else {
+                    alert('خطا: ' + data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 بروزرسانی';
+                }
+            } catch (error) {
+                alert('خطا در ارتباط با سرور');
+                btn.disabled = false;
+                btn.innerHTML = '🔄 بروزرسانی';
+            }
+        }
+        
+        // بروزرسانی خودکار صفحه هر 2 دقیقه
+        setInterval(() => {
+            fetch('/api/prices')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.prices && data.prices.length > 0) {
+                        location.reload();
+                    }
+                })
+                .catch(err => console.error('خطا در بروزرسانی خودکار:', err));
+        }, 2 * 60 * 1000);
+    </script>
+</body>
+</html>
