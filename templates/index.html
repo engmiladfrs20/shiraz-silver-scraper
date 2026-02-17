@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قیمت نقره - شیراز طلا و نقره</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <title>قیمت نقره - ساچمه‌خانه شیراز</title>
     <style>
         * {
             margin: 0;
@@ -13,375 +12,439 @@
         }
         
         body {
-            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
             min-height: 100vh;
-            padding: 20px;
-            color: #333;
+            padding: 15px;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 600px;
             margin: 0 auto;
         }
         
         .header {
             background: white;
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             text-align: center;
         }
         
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 1.2em;
-        }
-        
-        .info-bar {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .info-item {
-            text-align: center;
-            padding: 15px;
-            border-radius: 12px;
-            background: #f8f9fa;
-        }
-        
-        .info-item .label {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        
-        .info-item .value {
-            color: #333;
+            color: #2c3e50;
             font-size: 22px;
+            margin-bottom: 12px;
+        }
+        
+        .header-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .info-badge {
+            background: #27ae60;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
             font-weight: bold;
         }
         
-        .refresh-btn {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        .setup-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: #e74c3c;
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        
+        .setup-link:hover {
+            background: #c0392b;
+        }
+        
+        .category-section {
+            margin-bottom: 25px;
+        }
+        
+        .category-title {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
             font-size: 16px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-        }
-        
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-        }
-        
-        .refresh-btn:active {
-            transform: translateY(0);
-        }
-        
-        .prices-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
+            font-weight: bold;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         
         .price-card {
             background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            transition: transform 0.3s, box-shadow 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .price-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
         .price-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
         }
         
-        .price-card h3 {
-            font-size: 1.4em;
-            margin-bottom: 20px;
-            color: #333;
+        .price-card.inactive {
+            background: #f8f9fa;
+            opacity: 0.6;
         }
         
-        .price-row {
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            padding: 15px;
-            background: #f8f9fa;
+        }
+        
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
             border-radius: 12px;
-        }
-        
-        .price-row .label {
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .price-values {
-            text-align: left;
-        }
-        
-        .price-original {
-            text-decoration: line-through;
-            color: #999;
-            font-size: 0.9em;
-            margin-bottom: 3px;
-        }
-        
-        .price-new {
-            color: #27ae60;
-            font-size: 1.1em;
+            font-size: 11px;
             font-weight: bold;
         }
         
-        .increase-badge {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .price-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .price-btn {
+            padding: 18px 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
             color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .price-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .price-btn.buy {
+            background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+        }
+        
+        .price-btn.sell {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .price-btn.inactive {
+            background: #95a5a6;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .price-label {
+            font-size: 12px;
+            opacity: 0.95;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .price-value {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+        
+        .change-info {
+            margin-top: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .change-badge {
             display: inline-block;
-            margin-top: 15px;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
         }
         
-        .timestamp {
-            color: #999;
-            font-size: 0.85em;
-            margin-top: 15px;
-            text-align: center;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
+        .change-positive {
+            background: #d4edda;
+            color: #155724;
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        .change-negative {
+            background: #f8d7da;
+            color: #721c24;
         }
         
-        .empty-state h2 {
-            font-size: 2em;
-            margin-bottom: 15px;
-            color: #666;
-        }
-        
-        .empty-state p {
-            color: #999;
-            font-size: 1.1em;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .not-configured {
-            background: white;
-            border-radius: 20px;
-            padding: 50px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        .not-configured h2 {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .not-configured p {
-            color: #666;
-            font-size: 1.2em;
-            margin-bottom: 30px;
-        }
-
-        .setup-btn {
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 15px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 18px 40px;
-            border-radius: 12px;
-            font-size: 18px;
+            border-radius: 50px;
             cursor: pointer;
-            font-family: inherit;
-            text-decoration: none;
-            display: inline-block;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            transition: all 0.3s;
+            z-index: 1000;
         }
-
-        .setup-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.5);
+        }
+        
+        .refresh-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .no-data h2 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .no-data p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 18px;
+            }
+            
+            .price-value {
+                font-size: 18px;
+            }
+            
+            .price-label {
+                font-size: 11px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>💎 قیمت نقره - شیراز طلا و نقره</h1>
-            <p>بروزرسانی خودکار هر 30 دقیقه</p>
-        </div>
-        
-        {% if not is_configured %}
-            <div class="not-configured">
-                <h2>🔧 تنظیمات اولیه</h2>
-                <p>برای شروع، ابتدا باید تنظیمات را انجام دهید</p>
-                <a href="/setup" class="setup-btn">شروع تنظیمات</a>
-            </div>
-        {% else %}
-            <div class="info-bar">
-                <div class="info-item">
-                    <div class="label">آخرین بروزرسانی</div>
-                    <div class="value" id="lastUpdate">
-                        {% if last_update %}
-                            {{ last_update.split('T')[1].split('.')[0] }}
-                        {% else %}
-                            هنوز بروز نشده
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="label">درصد افزایش</div>
-                    <div class="value">{{ increase_percentage }}%</div>
-                </div>
-                <div class="info-item">
-                    <div class="label">تعداد محصولات</div>
-                    <div class="value">{{ prices|length }}</div>
-                </div>
-                <div class="info-item">
-                    <button class="refresh-btn" onclick="refreshPrices()">
-                        🔄 بروزرسانی
-                    </button>
-                </div>
-            </div>
+            <h1>💎 قیمت نقره - ساچمه‌خانه شیراز</h1>
             
-            {% if prices %}
-                <div class="prices-grid">
-                    {% for item in prices %}
-                    <div class="price-card">
-                        <h3>{{ item.name }}</h3>
-                        
-                        <div class="price-row">
-                            <span class="label">قیمت خرید:</span>
-                            <div class="price-values">
-                                <div class="price-original">{{ "{:,}".format(item.buy_price_original) }} تومان</div>
-                                <div class="price-new">{{ "{:,}".format(item.buy_price) }} تومان</div>
-                            </div>
-                        </div>
-                        
-                        <div class="price-row">
-                            <span class="label">قیمت فروش:</span>
-                            <div class="price-values">
-                                <div class="price-original">{{ "{:,}".format(item.sell_price_original) }} تومان</div>
-                                <div class="price-new">{{ "{:,}".format(item.sell_price) }} تومان</div>
-                            </div>
-                        </div>
-                        
-                        <div class="increase-badge">
-                            افزایش: +{{ "%.1f"|format(item.increase_percentage) }}%
-                        </div>
-                        
-                        <div class="timestamp">
-                            {{ item.unit if item.unit else '' }}
-                        </div>
-                    </div>
-                    {% endfor %}
+            {% if is_configured %}
+                <div class="header-info">
+                    <span class="info-badge">✅ فعال</span>
+                    {% if increase_percentage != 0 %}
+                        <span class="info-badge">📊 افزایش: {{ increase_percentage }}%</span>
+                    {% endif %}
+                    {% if last_update %}
+                        <span style="font-size: 12px; color: #666;">
+                            🕐 {{ last_update }}
+                        </span>
+                    {% endif %}
                 </div>
             {% else %}
-                <div class="empty-state">
-                    <h2>📭 هنوز قیمتی دریافت نشده</h2>
-                    <p>لطفاً چند دقیقه صبر کنید یا دکمه بروزرسانی را بزنید</p>
+                <p style="color: #e74c3c; font-size: 14px; margin: 12px 0;">⚠️ سیستم پیکربندی نشده</p>
+                <a href="/setup" class="setup-link">⚙️ پیکربندی سیستم</a>
+            {% endif %}
+        </div>
+        
+        {% if prices %}
+            {% set sachme_products = [] %}
+            {% set shams_products = [] %}
+            
+            {% for price in prices %}
+                {% if 'ساچمه' in price.name and 'شمش' not in price.name %}
+                    {% set _ = sachme_products.append(price) %}
+                {% elif 'شمش' in price.name %}
+                    {% set _ = shams_products.append(price) %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if sachme_products %}
+                <div class="category-section">
+                    <div class="category-title">📦 ساچمه نقره</div>
+                    {% for price in sachme_products %}
+                        <div class="price-card {% if not price.is_active %}inactive{% endif %}">
+                            <div class="card-header">
+                                <span class="product-name">{{ price.name }}</span>
+                                <span class="status-badge {% if price.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                                    {{ price.status_text }}
+                                </span>
+                            </div>
+                            
+                            <div class="price-buttons">
+                                <div class="price-btn buy {% if price.buy_status == 0 %}inactive{% endif %}">
+                                    <div class="price-label">
+                                        <span>💰</span>
+                                        <span>بخرید</span>
+                                    </div>
+                                    <div class="price-value">{{ "{:,}".format(price.buy_price) }}</div>
+                                </div>
+                                
+                                <div class="price-btn sell {% if price.sell_status == 0 %}inactive{% endif %}">
+                                    <div class="price-label">
+                                        <span>💵</span>
+                                        <span>بفروشید</span>
+                                    </div>
+                                    <div class="price-value">{{ "{:,}".format(price.sell_price) }}</div>
+                                </div>
+                            </div>
+                            
+                            {% if price.change != 0 %}
+                                <div class="change-info">
+                                    <span class="change-badge {% if price.change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                                        {% if price.change > 0 %}▲{% else %}▼{% endif %} {{ "%.2f"|format(price.change) }}%
+                                    </span>
+                                    <span style="color: #666; font-size: 12px;">تغییرات</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
                 </div>
             {% endif %}
+            
+            {% if shams_products %}
+                <div class="category-section">
+                    <div class="category-title">🌟 شمش نقره ساچمه خانه</div>
+                    {% for price in shams_products %}
+                        <div class="price-card {% if not price.is_active %}inactive{% endif %}">
+                            <div class="card-header">
+                                <span class="product-name">{{ price.name }}</span>
+                                <span class="status-badge {% if price.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                                    {{ price.status_text }}
+                                </span>
+                            </div>
+                            
+                            <div class="price-buttons">
+                                <div class="price-btn buy {% if price.buy_status == 0 %}inactive{% endif %}">
+                                    <div class="price-label">
+                                        <span>💰</span>
+                                        <span>بخرید</span>
+                                    </div>
+                                    <div class="price-value">{{ "{:,}".format(price.buy_price) }}</div>
+                                </div>
+                                
+                                <div class="price-btn sell {% if price.sell_status == 0 %}inactive{% endif %}">
+                                    <div class="price-label">
+                                        <span>💵</span>
+                                        <span>بفروشید</span>
+                                    </div>
+                                    <div class="price-value">{{ "{:,}".format(price.sell_price) }}</div>
+                                </div>
+                            </div>
+                            
+                            {% if price.change != 0 %}
+                                <div class="change-info">
+                                    <span class="change-badge {% if price.change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                                        {% if price.change > 0 %}▲{% else %}▼{% endif %} {{ "%.2f"|format(price.change) }}%
+                                    </span>
+                                    <span style="color: #666; font-size: 12px;">تغییرات</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="no-data">
+                <h2>📭 داده‌ای موجود نیست</h2>
+                <p>لطفاً ابتدا سیستم را پیکربندی کنید</p>
+                {% if not is_configured %}
+                    <a href="/setup" class="setup-link" style="margin-top: 20px;">⚙️ پیکربندی سیستم</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        {% if is_configured %}
+            <button class="refresh-btn" onclick="refreshPrices()">🔄 بروزرسانی</button>
         {% endif %}
     </div>
     
     <script>
         async function refreshPrices() {
-            const btn = event.target;
+            const btn = document.querySelector('.refresh-btn');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> در حال بروزرسانی...';
+            btn.textContent = '⏳ در حال بروزرسانی...';
             
             try {
                 const response = await fetch('/api/refresh');
                 const data = await response.json();
                 
                 if (data.success) {
-                    setTimeout(() => location.reload(), 3000);
+                    btn.textContent = '✅ در حال بارگذاری...';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 } else {
-                    alert('خطا: ' + data.message);
+                    alert('خطا در بروزرسانی: ' + data.message);
                     btn.disabled = false;
-                    btn.innerHTML = '🔄 بروزرسانی';
+                    btn.textContent = '🔄 بروزرسانی';
                 }
             } catch (error) {
-                alert('خطا در ارتباط با سرور');
+                alert('خطا در بروزرسانی');
                 btn.disabled = false;
-                btn.innerHTML = '🔄 بروزرسانی';
+                btn.textContent = '🔄 بروزرسانی';
             }
         }
         
-        // بروزرسانی خودکار صفحه هر 2 دقیقه
+        // بروزرسانی خودکار هر 5 دقیقه
         setInterval(() => {
-            fetch('/api/prices')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.prices && data.prices.length > 0) {
-                        location.reload();
-                    }
-                })
-                .catch(err => console.error('خطا در بروزرسانی خودکار:', err));
-        }, 2 * 60 * 1000);
+            window.location.reload();
+        }, 5 * 60 * 1000);
     </script>
 </body>
 </html>
