@@ -120,17 +120,17 @@ def setup():
                 from selenium.webdriver.support.ui import WebDriverWait
                 from selenium.webdriver.support import expected_conditions as EC
                 from selenium.webdriver.common.keys import Keys
+                from selenium.common.exceptions import NoAlertPresentException
                 import time
                 
                 time.sleep(5)
                 
                 logger.info(f"📸 Title صفحه: {scraper.driver.title}")
                 
-                # بستن popup نصب اپلیکیشن
+                # بستن popup
                 try:
                     logger.info("🚫 تلاش برای بستن popup نصب اپلیکیشن...")
                     
-                    # روش 1: کلیک روی دکمه بستن
                     close_selectors = [
                         "//button[contains(@class, 'close')]",
                         "//button[@aria-label='Close']",
@@ -153,7 +153,6 @@ def setup():
                         except:
                             continue
                     
-                    # روش 2: کلیک بیرون از modal
                     if not popup_closed:
                         logger.info("🔄 تلاش روش دیگر: کلیک بیرون از modal")
                         try:
@@ -165,7 +164,6 @@ def setup():
                         except:
                             pass
                     
-                    # روش 3: فشردن ESC
                     if not popup_closed:
                         logger.info("🔄 فشردن کلید ESC")
                         scraper.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
@@ -219,7 +217,6 @@ def setup():
                     
                     submitted = False
                     
-                    # روش 1: کلیک عادی
                     for idx, selector in enumerate(submit_selectors):
                         try:
                             logger.info(f"🔍 تلاش کلیک دکمه {idx+1}: {selector}")
@@ -234,7 +231,6 @@ def setup():
                             logger.warning(f"❌ دکمه {idx+1} کار نکرد: {str(e)[:100]}")
                             continue
                     
-                    # روش 2: JavaScript click
                     if not submitted:
                         logger.info("🔄 تلاش با JavaScript click...")
                         try:
@@ -245,7 +241,6 @@ def setup():
                         except Exception as e:
                             logger.error(f"❌ JavaScript click هم کار نکرد: {e}")
                     
-                    # روش 3: فشردن Enter
                     if not submitted:
                         logger.info("🔄 فشردن Enter...")
                         try:
@@ -256,9 +251,67 @@ def setup():
                             logger.error(f"❌ Enter هم کار نکرد: {e}")
                     
                     if submitted:
-                        logger.info(f"📧 درخواست کد SMS به شماره {mobile} ارسال شد!")
-                        data_store['sms_requested'] = True
+                        logger.info(f"📧 کلیک submit انجام شد")
+                        
+                        # بررسی نتیجه
                         time.sleep(3)
+                        
+                        current_url = scraper.driver.current_url
+                        logger.info(f"🌐 URL بعد از submit: {current_url}")
+                        
+                        # چک کردن alert
+                        try:
+                            alert = scraper.driver.switch_to.alert
+                            alert_text = alert.text
+                            logger.info(f"⚠️ Alert پیدا شد: {alert_text}")
+                            alert.accept()
+                        except NoAlertPresentException:
+                            logger.info("ℹ️ Alert وجود ندارد")
+                        except Exception as e:
+                            logger.info(f"ℹ️ بررسی alert: {str(e)[:100]}")
+                        
+                        # جستجوی پیام‌های خطا
+                        try:
+                            error_selectors = [
+                                "//div[contains(@class, 'error')]",
+                                "//div[contains(@class, 'alert-danger')]",
+                                "//span[contains(@class, 'error')]",
+                                "//p[contains(@class, 'text-danger')]",
+                                "//div[contains(@class, 'invalid')]"
+                            ]
+                            
+                            found_error = False
+                            for selector in error_selectors:
+                                try:
+                                    error_elements = scraper.driver.find_elements(By.XPATH, selector)
+                                    for elem in error_elements:
+                                        if elem.is_displayed() and elem.text.strip():
+                                            logger.warning(f"⚠️ پیام خطا: {elem.text}")
+                                            found_error = True
+                                except:
+                                    continue
+                            
+                            if not found_error:
+                                logger.info("ℹ️ پیام خطایی پیدا نشد")
+                        except Exception as e:
+                            logger.info(f"ℹ️ بررسی خطاها: {str(e)[:100]}")
+                        
+                        # چک کردن فیلد کد
+                        try:
+                            code_field = scraper.driver.find_element(By.XPATH, "//input[contains(@placeholder, 'کد') or @name='code']")
+                            if code_field.is_displayed():
+                                logger.info("✅✅✅ فیلد کد تایید ظاهر شد - SMS احتمالاً ارسال شده!")
+                            else:
+                                logger.warning("⚠️ فیلد کد پیدا شد اما نمایش داده نمی‌شود")
+                        except:
+                            logger.warning("❌ فیلد کد تایید پیدا نشد - احتمالاً SMS ارسال نشده!")
+                        
+                        # HTML صفحه
+                        logger.info("📄 HTML صفحه بعد از submit (اول 2000 کاراکتر):")
+                        logger.info(scraper.driver.page_source[:2000])
+                        
+                        data_store['sms_requested'] = True
+                        time.sleep(2)
                     else:
                         logger.error("❌ هیچ روشی برای submit کار نکرد")
                 else:
