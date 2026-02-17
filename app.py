@@ -7,6 +7,7 @@ import os
 import threading
 import logging
 import sys
+import time
 
 # تنظیم logging
 logging.basicConfig(
@@ -107,219 +108,144 @@ def setup():
             logger.info(f"درصد افزایش: {increase_pct}%")
             logger.info("="*60)
             
-            try:
-                logger.info("🔧 شروع راه‌اندازی Selenium...")
-                scraper.setup_driver()
-                logger.info("✅ Selenium driver ساخته شد")
-                
-                logger.info(f"🌐 در حال باز کردن سایت: {scraper.base_url}")
-                scraper.driver.get(scraper.base_url)
-                logger.info(f"✅ سایت بارگذاری شد: {scraper.driver.current_url}")
-                
-                from selenium.webdriver.common.by import By
-                from selenium.webdriver.support.ui import WebDriverWait
-                from selenium.webdriver.support import expected_conditions as EC
-                from selenium.webdriver.common.keys import Keys
-                from selenium.common.exceptions import NoAlertPresentException
-                import time
-                
-                time.sleep(5)
-                
-                logger.info(f"📸 Title صفحه: {scraper.driver.title}")
-                
-                # بستن popup
+            # اجرای Selenium در thread جداگانه برای جلوگیری از timeout
+            def selenium_task():
                 try:
-                    logger.info("🚫 تلاش برای بستن popup نصب اپلیکیشن...")
+                    logger.info("🔧 شروع راه‌اندازی Selenium...")
+                    scraper.setup_driver()
+                    logger.info("✅ Selenium driver ساخته شد")
                     
-                    close_selectors = [
-                        "//button[contains(@class, 'close')]",
-                        "//button[@aria-label='Close']",
-                        "//button[contains(@class, 'modal-close')]",
-                        "//div[contains(@class, 'modal')]//button",
-                        "//button[contains(@onclick, 'close')]"
-                    ]
+                    logger.info(f"🌐 در حال باز کردن سایت: {scraper.base_url}")
+                    scraper.driver.get(scraper.base_url)
+                    logger.info(f"✅ سایت بارگذاری شد: {scraper.driver.current_url}")
                     
-                    popup_closed = False
-                    for selector in close_selectors:
-                        try:
-                            close_btn = WebDriverWait(scraper.driver, 2).until(
-                                EC.element_to_be_clickable((By.XPATH, selector))
-                            )
-                            close_btn.click()
-                            logger.info(f"✅ Popup بسته شد با selector: {selector}")
-                            popup_closed = True
-                            time.sleep(1)
-                            break
-                        except:
-                            continue
+                    from selenium.webdriver.common.by import By
+                    from selenium.webdriver.support.ui import WebDriverWait
+                    from selenium.webdriver.support import expected_conditions as EC
+                    from selenium.webdriver.common.keys import Keys
+                    from selenium.common.exceptions import NoAlertPresentException
                     
-                    if not popup_closed:
-                        logger.info("🔄 تلاش روش دیگر: کلیک بیرون از modal")
-                        try:
-                            backdrop = scraper.driver.find_element(By.XPATH, "//div[contains(@class, 'modal-backdrop') or contains(@class, 'overlay')]")
-                            backdrop.click()
-                            logger.info("✅ کلیک روی backdrop انجام شد")
-                            popup_closed = True
-                            time.sleep(1)
-                        except:
-                            pass
+                    time.sleep(3)
                     
-                    if not popup_closed:
-                        logger.info("🔄 فشردن کلید ESC")
+                    logger.info(f"📸 Title صفحه: {scraper.driver.title}")
+                    
+                    # بستن popup
+                    try:
+                        logger.info("🚫 بستن popup...")
                         scraper.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
                         time.sleep(1)
                         logger.info("✅ ESC فشرده شد")
-                        popup_closed = True
-                    
-                    if popup_closed:
-                        logger.info("✅ Popup بسته شد")
-                    
-                except Exception as e:
-                    logger.warning(f"⚠️ خطا در بستن popup: {e}")
-                
-                time.sleep(2)
-                
-                # پیدا کردن input موبایل
-                mobile_selectors = [
-                    "//input[@type='tel']",
-                    "//input[@name='mobile']",
-                    "//input[@name='phone']",
-                    "//input[contains(@placeholder, 'موبایل')]",
-                    "//input[contains(@placeholder, 'شماره')]",
-                ]
-                
-                mobile_input = None
-                for idx, selector in enumerate(mobile_selectors):
-                    try:
-                        logger.info(f"🔍 تلاش selector {idx+1}: {selector}")
-                        mobile_input = WebDriverWait(scraper.driver, 3).until(
-                            EC.presence_of_element_located((By.XPATH, selector))
-                        )
-                        logger.info(f"✅ فیلد موبایل پیدا شد با selector: {selector}")
-                        break
                     except Exception as e:
-                        logger.warning(f"❌ Selector {idx+1} کار نکرد")
-                        continue
-                
-                if mobile_input:
-                    mobile_input.clear()
-                    mobile_input.send_keys(mobile)
-                    logger.info(f"✅ شماره {mobile} وارد شد")
+                        logger.warning(f"⚠️ popup: {str(e)[:50]}")
                     
-                    time.sleep(2)
+                    time.sleep(1)
                     
-                    # کلیک روی دکمه ارسال
-                    submit_selectors = [
-                        "//button[@type='submit']",
-                        "//button[contains(text(), 'ارسال')]",
-                        "//input[@type='submit']",
+                    # پیدا کردن input موبایل
+                    mobile_selectors = [
+                        "//input[@name='mobile']",
+                        "//input[@type='tel']",
+                        "//input[contains(@placeholder, 'موبایل')]",
                     ]
                     
-                    submitted = False
-                    
-                    for idx, selector in enumerate(submit_selectors):
+                    mobile_input = None
+                    for idx, selector in enumerate(mobile_selectors):
                         try:
-                            logger.info(f"🔍 تلاش کلیک دکمه {idx+1}: {selector}")
-                            submit_btn = WebDriverWait(scraper.driver, 3).until(
-                                EC.element_to_be_clickable((By.XPATH, selector))
+                            mobile_input = WebDriverWait(scraper.driver, 2).until(
+                                EC.presence_of_element_located((By.XPATH, selector))
                             )
-                            submit_btn.click()
-                            logger.info(f"✅ دکمه ارسال کلیک شد")
-                            submitted = True
+                            logger.info(f"✅ فیلد موبایل پیدا شد")
                             break
-                        except Exception as e:
-                            logger.warning(f"❌ دکمه {idx+1} کار نکرد: {str(e)[:100]}")
+                        except:
                             continue
                     
-                    if not submitted:
-                        logger.info("🔄 تلاش با JavaScript click...")
+                    if mobile_input:
+                        mobile_input.clear()
+                        mobile_input.send_keys(mobile)
+                        logger.info(f"✅ شماره {mobile} وارد شد")
+                        
+                        time.sleep(1)
+                        
+                        # کلیک submit با JavaScript
                         try:
                             submit_btn = scraper.driver.find_element(By.XPATH, "//button[@type='submit']")
                             scraper.driver.execute_script("arguments[0].click();", submit_btn)
-                            logger.info("✅ دکمه با JavaScript کلیک شد")
-                            submitted = True
+                            logger.info("✅ دکمه کلیک شد")
                         except Exception as e:
-                            logger.error(f"❌ JavaScript click هم کار نکرد: {e}")
-                    
-                    if not submitted:
-                        logger.info("🔄 فشردن Enter...")
-                        try:
+                            logger.error(f"❌ کلیک: {str(e)[:50]}")
                             mobile_input.send_keys(Keys.RETURN)
                             logger.info("✅ Enter فشرده شد")
-                            submitted = True
-                        except Exception as e:
-                            logger.error(f"❌ Enter هم کار نکرد: {e}")
-                    
-                    if submitted:
-                        logger.info(f"📧 کلیک submit انجام شد")
                         
-                        # بررسی نتیجه
                         time.sleep(3)
                         
+                        # بررسی نتیجه
                         current_url = scraper.driver.current_url
-                        logger.info(f"🌐 URL بعد از submit: {current_url}")
+                        logger.info(f"🌐 URL: {current_url}")
                         
-                        # چک کردن alert
+                        # چک alert
                         try:
                             alert = scraper.driver.switch_to.alert
                             alert_text = alert.text
-                            logger.info(f"⚠️ Alert پیدا شد: {alert_text}")
+                            logger.info(f"⚠️ Alert: {alert_text}")
                             alert.accept()
                         except NoAlertPresentException:
-                            logger.info("ℹ️ Alert وجود ندارد")
+                            logger.info("ℹ️ بدون alert")
                         except Exception as e:
-                            logger.info(f"ℹ️ بررسی alert: {str(e)[:100]}")
+                            logger.info(f"ℹ️ alert check: {str(e)[:30]}")
                         
-                        # جستجوی پیام‌های خطا
-                        try:
-                            error_selectors = [
-                                "//div[contains(@class, 'error')]",
-                                "//div[contains(@class, 'alert-danger')]",
-                                "//span[contains(@class, 'error')]",
-                                "//p[contains(@class, 'text-danger')]",
-                                "//div[contains(@class, 'invalid')]"
-                            ]
-                            
-                            found_error = False
-                            for selector in error_selectors:
-                                try:
-                                    error_elements = scraper.driver.find_elements(By.XPATH, selector)
-                                    for elem in error_elements:
-                                        if elem.is_displayed() and elem.text.strip():
-                                            logger.warning(f"⚠️ پیام خطا: {elem.text}")
-                                            found_error = True
-                                except:
-                                    continue
-                            
-                            if not found_error:
-                                logger.info("ℹ️ پیام خطایی پیدا نشد")
-                        except Exception as e:
-                            logger.info(f"ℹ️ بررسی خطاها: {str(e)[:100]}")
-                        
-                        # چک کردن فیلد کد
+                        # چک فیلد کد
                         try:
                             code_field = scraper.driver.find_element(By.XPATH, "//input[contains(@placeholder, 'کد') or @name='code']")
                             if code_field.is_displayed():
-                                logger.info("✅✅✅ فیلد کد تایید ظاهر شد - SMS احتمالاً ارسال شده!")
+                                logger.info("✅✅✅ فیلد کد ظاهر شد - SMS ارسال شده!")
+                                data_store['sms_requested'] = True
                             else:
-                                logger.warning("⚠️ فیلد کد پیدا شد اما نمایش داده نمی‌شود")
+                                logger.warning("⚠️ فیلد کد نمایش نمی‌شود")
                         except:
-                            logger.warning("❌ فیلد کد تایید پیدا نشد - احتمالاً SMS ارسال نشده!")
+                            logger.warning("❌ فیلد کد پیدا نشد - SMS احتمالاً ارسال نشده")
+                            
+                            # چاپ HTML برای دیباگ
+                            logger.info("📄 HTML (اول 1500 کاراکتر):")
+                            logger.info(scraper.driver.page_source[:1500])
                         
-                        # HTML صفحه
-                        logger.info("📄 HTML صفحه بعد از submit (اول 2000 کاراکتر):")
-                        logger.info(scraper.driver.page_source[:2000])
+                        # لیست تمام input ها
+                        try:
+                            all_inputs = scraper.driver.find_elements(By.XPATH, "//input")
+                            logger.info(f"📊 تعداد input: {len(all_inputs)}")
+                            for i, inp in enumerate(all_inputs[:5]):
+                                try:
+                                    if inp.is_displayed():
+                                        logger.info(f"  Input {i+1}: type={inp.get_attribute('type')}, name={inp.get_attribute('name')}, placeholder={inp.get_attribute('placeholder')}")
+                                except:
+                                    pass
+                        except Exception as e:
+                            logger.info(f"خطا در لیست inputs: {str(e)[:50]}")
                         
-                        data_store['sms_requested'] = True
-                        time.sleep(2)
+                        # بستن browser برای آزاد کردن RAM
+                        logger.info("🔄 بستن browser...")
+                        scraper.close()
+                        logger.info("✅ Browser بسته شد - RAM آزاد شد")
+                        
                     else:
-                        logger.error("❌ هیچ روشی برای submit کار نکرد")
-                else:
-                    logger.error("❌ فیلد موبایل پیدا نشد")
-                
-            except Exception as e:
-                logger.error(f"❌ خطای Selenium: {e}", exc_info=True)
+                        logger.error("❌ فیلد موبایل پیدا نشد")
+                        scraper.close()
+                    
+                except Exception as e:
+                    logger.error(f"❌ خطای Selenium: {e}", exc_info=True)
+                    try:
+                        scraper.close()
+                    except:
+                        pass
             
+            # شروع thread
+            thread = threading.Thread(target=selenium_task)
+            thread.daemon = True
+            thread.start()
+            
+            # صبر کوتاه (2 ثانیه) و بعد redirect
+            # Selenium در پس‌زمینه ادامه می‌دهد
+            time.sleep(2)
+            
+            logger.info("⏭️ Redirect به صفحه verify (Selenium در پس‌زمینه ادامه دارد)")
             return redirect(url_for('verify'))
             
         except Exception as e:
@@ -346,7 +272,13 @@ def verify():
             
             try:
                 from selenium.webdriver.common.by import By
-                import time
+                
+                # چک کردن اگر driver هنوز باز است
+                if not scraper.driver:
+                    logger.error("❌ Driver بسته شده - نیاز به راه‌اندازی مجدد")
+                    scraper.setup_driver()
+                    scraper.driver.get(scraper.base_url)
+                    time.sleep(3)
                 
                 code_inputs = scraper.driver.find_elements(By.XPATH, "//input")
                 logger.info(f"📝 تعداد input پیدا شده: {len(code_inputs)}")
@@ -371,12 +303,12 @@ def verify():
                     confirm_btn.click()
                     logger.info(f"✅ دکمه تایید کلیک شد")
                 except Exception as e:
-                    logger.warning(f"⚠️ دکمه تایید پیدا نشد: {e}")
+                    logger.warning(f"⚠️ دکمه تایید: {str(e)[:50]}")
                 
                 time.sleep(5)
                 
                 current_url = scraper.driver.current_url
-                logger.info(f"🌐 URL فعلی بعد از تایید: {current_url}")
+                logger.info(f"🌐 URL بعد از تایید: {current_url}")
                 
                 if 'login' not in current_url.lower():
                     scraper.save_session()
@@ -389,7 +321,7 @@ def verify():
                     
                     return redirect(url_for('index'))
                 else:
-                    logger.error(f"❌ ورود ناموفق - هنوز در صفحه login")
+                    logger.error(f"❌ ورود ناموفق")
                     return render_template('verify.html', 
                                          mobile=mobile, 
                                          error='کد نادرست است یا منقضی شده')
