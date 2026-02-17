@@ -1,9 +1,5 @@
 Flask==3.0.0
-selenium==4.16.0
-webdriver-manager==4.0.1
-beautifulsoup4==4.12.2
-APScheduler==3.10.4
-python-dotenv==1.0.0
-gunicorn==21.2.0
 requests==2.31.0
-lxml==5.1.0
+APScheduler==3.10.4
+jdatetime==5.0.0
+gunicorn==21.2.0
