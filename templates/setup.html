@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنظیمات - شیراز طلا و نقره</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .setup-container {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .helper-text {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-top: 30px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #fcc;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <h1>🔧 تنظیمات اولیه</h1>
+        <p class="subtitle">اطلاعات زیر را وارد کنید</p>
+        
+        {% if error %}
+        <div class="error">
+            ❌ {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="/setup">
+            <div class="form-group">
+                <label for="mobile">شماره موبایل:</label>
+                <input 
+                    type="tel" 
+                    id="mobile" 
+                    name="mobile" 
+                    placeholder="09123456789"
+                    maxlength="11"
+                    required
+                    pattern="09[0-9]{9}"
+                >
+                <p class="helper-text">شماره‌ای که در سایت شیراز طلا و نقره ثبت کرده‌اید</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="increase_percentage">درصد افزایش قیمت:</label>
+                <input 
+                    type="number" 
+                    id="increase_percentage" 
+                    name="increase_percentage" 
+                    placeholder="مثال: 5"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    required
+                >
+                <p class="helper-text">قیمت‌ها با این درصد افزایش داده می‌شوند</p>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                ادامه و دریافت کد تایید →
+            </button>
+        </form>
+    </div>
+</body>
+</html>

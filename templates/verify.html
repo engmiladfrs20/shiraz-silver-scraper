@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تایید کد - شیراز طلا و نقره</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .verify-container {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .mobile-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 24px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            letter-spacing: 5px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .helper-text {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+            margin-top: 30px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #fcc;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #90caf9;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <h1>📱 تایید کد SMS</h1>
+        <p class="subtitle">کد تایید برای شماره زیر ارسال شد:</p>
+        
+        <div class="mobile-display">
+            {{ mobile }}
+        </div>
+        
+        <div class="info-box">
+            💡 کد تایید به شماره موبایل شما در سایت شیراز طلا و نقره ارسال شده است
+        </div>
+        
+        {% if error %}
+        <div class="error">
+            ❌ {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="/verify">
+            <div class="form-group">
+                <label for="code">کد تایید (6 رقم):</label>
+                <input 
+                    type="text" 
+                    id="code" 
+                    name="code" 
+                    placeholder="• • • • • •"
+                    maxlength="6"
+                    required
+                    pattern="[0-9]{6}"
+                    autocomplete="off"
+                >
+                <p class="helper-text">
+                    کد 6 رقمی که از طریق پیامک دریافت کردید را وارد کنید
+                </p>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                ✓ تایید و ورود
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        // فوکوس خودکار روی input
+        document.getElementById('code').focus();
+        
+        // فقط عدد بپذیرد
+        document.getElementById('code').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+</html>
