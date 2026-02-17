@@ -11,6 +11,7 @@ class ShirazSilverAPI:
         self.website_url = "https://shirazgoldandsilver.ir"
         self.session = requests.Session()
         self.is_logged_in = False
+        self.token = None
         
         # Headers مطابق با مرورگر
         self.session.headers.update({
@@ -77,52 +78,52 @@ class ShirazSilverAPI:
     def verify_otp(self, mobile, code):
         """تایید کد OTP و ورود"""
         try:
-            # endpoint های احتمالی برای verify
-            endpoints = [
-                "/auth/verify-otp",
-                "/auth/login-otp",
-                "/auth/login",
-                "/auth/verify"
-            ]
+            url = f"{self.base_url}/auth/login"
             
             payload = {
                 "mobile": mobile,
-                "code": code,
                 "otp": code,
-                "verification_code": code
+                "password": None,
+                "type": "otp"
             }
             
-            for endpoint in endpoints:
-                try:
-                    url = f"{self.base_url}{endpoint}"
-                    print(f"🔄 تلاش verify با endpoint: {endpoint}")
-                    
-                    response = self.session.post(url, json=payload, timeout=30)
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        if data.get('success'):
-                            print(f"✅ ورود موفق!")
-                            
-                            # ذخیره token
-                            token = data.get('data', {}).get('token') or data.get('token')
-                            if token:
-                                self.session.headers['Authorization'] = f"Bearer {token}"
-                            
-                            self.is_logged_in = True
-                            return {
-                                'success': True,
-                                'message': 'ورود موفقیت‌آمیز',
-                                'data': data
-                            }
-                except:
-                    continue
+            print(f"🔐 ارسال درخواست verify به: {url}")
+            print(f"📦 Payload: {payload}")
             
-            # اگر هیچ endpoint کار نکرد
-            return {
-                'success': False,
-                'message': 'کد نادرست یا منقضی شده'
-            }
+            response = self.session.post(url, json=payload, timeout=30)
+            
+            print(f"📊 Status Code: {response.status_code}")
+            print(f"📄 Response: {response.text[:500]}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('success'):
+                    print(f"✅ ورود موفق!")
+                    
+                    # ذخیره token
+                    self.token = data.get('data', {}).get('token')
+                    if self.token:
+                        self.session.headers['Authorization'] = f"Bearer {self.token}"
+                        print(f"🔑 Token ذخیره شد: {self.token[:50]}...")
+                    
+                    self.is_logged_in = True
+                    
+                    return {
+                        'success': True,
+                        'message': 'ورود موفقیت‌آمیز',
+                        'data': data
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'message': data.get('message', 'کد نادرست یا منقضی شده')
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f'خطای HTTP {response.status_code}'
+                }
                 
         except Exception as e:
             print(f"❌ خطا در verify: {e}")
@@ -137,9 +138,10 @@ class ShirazSilverAPI:
             # endpoint های احتمالی
             endpoints = [
                 "/products",
-                "/products/silver",
+                "/products/list",
                 "/items",
-                "/prices"
+                "/gold-silver/prices",
+                "/price/list"
             ]
             
             for endpoint in endpoints:
@@ -151,20 +153,35 @@ class ShirazSilverAPI:
                     
                     if response.status_code == 200:
                         data = response.json()
-                        if data.get('success') and data.get('data'):
-                            print(f"✅ قیمت‌ها دریافت شد")
+                        
+                        # بررسی ساختار response
+                        prices_data = None
+                        if isinstance(data, dict):
+                            if data.get('success') and data.get('data'):
+                                prices_data = data['data']
+                            elif 'products' in data:
+                                prices_data = data['products']
+                            elif 'items' in data:
+                                prices_data = data['items']
+                        elif isinstance(data, list):
+                            prices_data = data
+                        
+                        if prices_data:
+                            print(f"✅ قیمت‌ها دریافت شد: {len(prices_data)} محصول")
                             return {
                                 'success': True,
-                                'prices': data['data'],
+                                'prices': prices_data,
                                 'message': 'قیمت‌ها با موفقیت دریافت شد'
                             }
-                except:
+                except Exception as e:
+                    print(f"⚠️ خطا در endpoint {endpoint}: {str(e)[:50]}")
                     continue
             
+            print("❌ هیچ endpoint برای قیمت‌ها کار نکرد")
             return {
                 'success': False,
                 'prices': [],
-                'message': 'خطا در دریافت قیمت‌ها'
+                'message': 'خطا در دریافت قیمت‌ها - endpoint پیدا نشد'
             }
                 
         except Exception as e:
@@ -183,4 +200,15 @@ if __name__ == "__main__":
     # تست ارسال OTP
     mobile = "09017812729"
     result = api.send_otp(mobile)
-    print(f"\n📋 نتیجه: {result}")
+    print(f"\n📋 نتیجه send_otp: {result}")
+    
+    if result['success']:
+        code = input("\n🔢 کد دریافتی را وارد کنید: ")
+        
+        verify_result = api.verify_otp(mobile, code)
+        print(f"\n📋 نتیجه verify: {verify_result}")
+        
+        if verify_result['success']:
+            print("\n🎉 ورود موفق! حال دریافت قیمت‌ها...")
+            prices = api.get_silver_prices()
+            print(f"\n📊 قیمت‌ها: {prices}")
