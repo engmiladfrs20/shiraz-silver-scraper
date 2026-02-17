@@ -167,12 +167,16 @@ class ShirazSilverAPI:
                             # اگر هر دو غیرفعال باشند = کاملاً غیرفعال
                             is_active = (buy_status == 1 or sell_status == 1)
                             
+                            # قیمت‌های اصلی به تومان (API قبلاً تومان می‌دهد)
+                            buy_price_toman = int(item.get('buy_price', 0))
+                            sell_price_toman = int(item.get('sell_price', 0))
+                            
                             formatted_item = {
                                 'id': item.get('id'),
                                 'title': item.get('title', ''),
                                 'name': item.get('title', ''),
-                                'buy_price': int(item.get('buy_price', 0)),
-                                'sell_price': int(item.get('sell_price', 0)),
+                                'buy_price': buy_price_toman,
+                                'sell_price': sell_price_toman,
                                 'buy_price_gheram': int(item.get('buy_price_gheram', 0)),
                                 'sell_price_gheram': int(item.get('sell_price_gheram', 0)),
                                 'change': float(item.get('change', 0)),
@@ -250,7 +254,7 @@ if __name__ == "__main__":
                 print(f"\n📋 نمایش 5 محصول اول:\n")
                 for i, price in enumerate(prices_result['prices'][:5], 1):
                     print(f"{i}. {price['title']} - {price['status_text']}")
-                    print(f"   خرید: {price['buy_price']:,} ریال (وضعیت: {'فعال' if price['buy_status'] else 'غیرفعال'})")
-                    print(f"   فروش: {price['sell_price']:,} ریال (وضعیت: {'فعال' if price['sell_status'] else 'غیرفعال'})")
+                    print(f"   خرید: {price['buy_price']:,} تومان")
+                    print(f"   فروش: {price['sell_price']:,} تومان")
                     print(f"   تغییر: {price['change']}%")
                     print()
