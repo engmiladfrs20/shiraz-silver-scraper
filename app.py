@@ -52,17 +52,20 @@ def update_prices_job():
         
         if result['success'] and result['prices']:
             updated_prices = []
+            increase = data_store['increase_percentage']
+            
             for item in result['prices']:
                 updated_item = item.copy()
                 
-                # اعمال درصد افزایش
-                buy_price = item.get('buy_price', 0) or item.get('buyPrice', 0) or item.get('price', 0)
-                sell_price = item.get('sell_price', 0) or item.get('sellPrice', 0) or item.get('price', 0)
+                # قیمت‌های اصلی (تومان)
+                buy_price = item.get('buy_price', 0)
+                sell_price = item.get('sell_price', 0)
                 
+                # ذخیره قیمت اصلی
                 updated_item['buy_price_original'] = buy_price
                 updated_item['sell_price_original'] = sell_price
                 
-                increase = data_store['increase_percentage']
+                # اعمال درصد افزایش
                 updated_item['buy_price'] = int(buy_price * (1 + increase / 100))
                 updated_item['sell_price'] = int(sell_price * (1 + increase / 100))
                 updated_item['increase_percentage'] = increase
@@ -70,7 +73,7 @@ def update_prices_job():
                 updated_prices.append(updated_item)
             
             data_store['prices'] = updated_prices
-            data_store['last_update'] = datetime.now().isoformat()
+            data_store['last_update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             logger.info(f"✅ قیمت‌ها بروزرسانی شد: {len(updated_prices)} محصول")
         else:
             logger.warning(f"⚠️ خطا در بروزرسانی: {result.get('message', 'نامشخص')}")
