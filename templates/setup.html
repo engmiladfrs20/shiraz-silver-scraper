@@ -5,128 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پیکربندی سیستم</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            min-height:100vh;display:flex;align-items:center;
+            justify-content:center;padding:20px;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        .setup-container{
+            background:#fff;border-radius:15px;padding:40px;
+            box-shadow:0 10px 40px rgba(0,0,0,.2);
+            max-width:450px;width:100%;
         }
-        
-        .setup-container {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            max-width: 450px;
-            width: 100%;
+        h1{color:#2c3e50;margin-bottom:10px;text-align:center;font-size:26px;}
+        p{color:#666;text-align:center;margin-bottom:25px;font-size:14px;}
+        .form-group{margin-bottom:20px;}
+        label{display:block;margin-bottom:8px;color:#2c3e50;font-weight:600;font-size:14px;}
+        input{
+            width:100%;padding:12px;border:2px solid #e9ecef;
+            border-radius:10px;font-size:15px;transition:border-color .3s;
+            direction:ltr;
         }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 26px;
+        input:focus{outline:none;border-color:#667eea;}
+        button{
+            width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff;border:none;border-radius:10px;font-size:16px;
+            font-weight:bold;cursor:pointer;transition:transform .3s;
         }
-        
-        p {
-            color: #666;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 14px;
+        button:hover{transform:translateY(-2px);}
+        .error{
+            background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;
+            margin-bottom:20px;text-align:center;font-size:14px;
         }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: border-color 0.3s;
-            direction: ltr;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-        }
-        
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
+        .back-link{
+            display:block;text-align:center;margin-top:15px;
+            color:#667eea;text-decoration:none;font-size:14px;
         }
     </style>
 </head>
 <body>
-    <div class="setup-container">
-        <h1>⚙️ پیکربندی سیستم</h1>
-        <p>برای شروع، شماره موبایل خود را وارد کنید</p>
-        
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
-        
-        <form method="POST">
-            <div class="form-group">
-                <label>📱 شماره موبایل:</label>
-                <input type="tel" name="mobile" placeholder="09123456789" required>
-            </div>
-            
-            <button type="submit">ارسال کد تایید</button>
-        </form>
-        
-        <a href="/" class="back-link">← بازگشت به صفحه اصلی</a>
-    </div>
+<div class="setup-container">
+    <h1>⚙️ پیکربندی سیستم</h1>
+    <p>شماره موبایل و درصد افزایش دلخواه را وارد کنید</p>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="form-group">
+            <label>📱 شماره موبایل:</label>
+            <input type="tel" name="mobile" placeholder="09123456789" required>
+        </div>
+
+        <div class="form-group">
+            <label>📊 درصد افزایش (مثلاً 4):</label>
+            <input type="number" step="0.1" name="increase_percentage"
+                   value="{{ increase_percentage or 0 }}">
+        </div>
+
+        <button type="submit">ارسال کد تایید</button>
+    </form>
+
+    <a href="/" class="back-link">← بازگشت به صفحه اصلی</a>
+</div>
 </body>
 </html>
