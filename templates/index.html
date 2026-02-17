@@ -5,301 +5,168 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قیمت نقره - ساچمه‌خانه شیراز</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            min-height:100vh;
+            padding:20px;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+        .container{max-width:1100px;margin:0 auto;}
+        .header{
+            background:#fff;border-radius:15px;padding:20px;
+            margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.15);
+            text-align:center;
         }
-        
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
+        .header h1{color:#2c3e50;font-size:24px;margin-bottom:10px;}
+        .header-info{color:#27ae60;font-size:14px;font-weight:600;}
+        .setup-link{
+            display:inline-block;margin-top:15px;padding:12px 30px;
+            background:#e74c3c;color:#fff;text-decoration:none;
+            border-radius:8px;font-weight:bold;
         }
-        
-        .header {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            text-align: center;
+        .prices-table-wrapper{
+            background:#fff;border-radius:15px;padding:0;
+            box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;
         }
-        
-        .header h1 {
-            color: #2c3e50;
-            font-size: 24px;
-            margin-bottom: 10px;
+        table{width:100%;border-collapse:collapse;}
+        thead{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+        thead th{
+            padding:18px 15px;text-align:center;color:#fff;
+            font-size:16px;font-weight:700;
         }
-        
-        .header-info {
-            color: #27ae60;
-            font-size: 14px;
-            font-weight: 600;
+        thead th:first-child{text-align:right;padding-right:30px;}
+        tbody tr{
+            border-bottom:1px solid #ecf0f1;transition:background .2s;
         }
-        
-        .setup-link {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 12px 30px;
-            background: #e74c3c;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
+        tbody tr:hover{background:#f8f9fa;}
+        tbody tr:last-child{border-bottom:none;}
+        tbody tr.inactive{opacity:.5;background:#f8f9fa;}
+        td{padding:20px 15px;text-align:center;font-size:15px;}
+        .product-name{
+            text-align:right!important;padding-right:30px!important;
+            font-weight:600;color:#2c3e50;font-size:16px;
         }
-        
-        .prices-table-wrapper {
-            background: white;
-            border-radius: 15px;
-            padding: 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            overflow: hidden;
+        .price-cell{
+            font-weight:700;font-size:18px;direction:ltr;
         }
-        
-        .prices-table {
-            width: 100%;
-            border-collapse: collapse;
+        .price-buy{color:#48c6ef;}
+        .price-sell{color:#f5576c;}
+        .status-badge{
+            display:inline-block;padding:4px 10px;border-radius:12px;
+            font-size:11px;font-weight:bold;margin-right:10px;
         }
-        
-        .prices-table thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .badge-active{background:#d4edda;color:#155724;}
+        .badge-inactive{background:#f8d7da;color:#721c24;}
+        .refresh-btn{
+            position:fixed;bottom:25px;left:25px;padding:15px 25px;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff;border:none;border-radius:50px;cursor:pointer;
+            font-size:15px;font-weight:bold;
+            box-shadow:0 5px 20px rgba(102,126,234,.4);
+            transition:all .3s;z-index:1000;
         }
-        
-        .prices-table thead th {
-            padding: 18px 15px;
-            text-align: center;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
+        .refresh-btn:hover{
+            transform:scale(1.05);
+            box-shadow:0 7px 25px rgba(102,126,234,.5);
         }
-        
-        .prices-table thead th:first-child {
-            text-align: right;
-            padding-right: 30px;
+        .refresh-btn:disabled{background:#95a5a6;cursor:not-allowed;}
+        .no-data{
+            text-align:center;padding:60px 20px;background:#fff;
+            border-radius:15px;box-shadow:0 4px 20px rgba(0,0,0,.15);
         }
-        
-        .prices-table tbody tr {
-            border-bottom: 1px solid #ecf0f1;
-            transition: background 0.2s;
-        }
-        
-        .prices-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .prices-table tbody tr:last-child {
-            border-bottom: none;
-        }
-        
-        .prices-table tbody tr.inactive {
-            opacity: 0.5;
-            background: #f8f9fa;
-        }
-        
-        .prices-table tbody td {
-            padding: 20px 15px;
-            text-align: center;
-            font-size: 15px;
-        }
-        
-        .product-name {
-            text-align: right !important;
-            padding-right: 30px !important;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 16px;
-        }
-        
-        .price-cell {
-            font-weight: 700;
-            font-size: 18px;
-            direction: ltr;
-        }
-        
-        .price-buy {
-            color: #48c6ef;
-        }
-        
-        .price-sell {
-            color: #f5576c;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        
-        .badge-active {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .refresh-btn {
-            position: fixed;
-            bottom: 25px;
-            left: 25px;
-            padding: 15px 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-        
-        .refresh-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 7px 25px rgba(102,126,234,0.5);
-        }
-        
-        .refresh-btn:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        .no-data {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        
-        .no-data h2 {
-            color: #e74c3c;
-            margin-bottom: 15px;
-        }
-        
-        @media (max-width: 768px) {
-            .prices-table thead th,
-            .prices-table tbody td {
-                padding: 12px 8px;
-                font-size: 13px;
-            }
-            
-            .product-name {
-                padding-right: 15px !important;
-                font-size: 14px;
-            }
-            
-            .price-cell {
-                font-size: 15px;
-            }
+        .no-data h2{color:#e74c3c;margin-bottom:15px;}
+        @media(max-width:768px){
+            thead th,td{padding:12px 8px;font-size:13px;}
+            .product-name{padding-right:15px!important;font-size:14px;}
+            .price-cell{font-size:15px;}
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>💎 قیمت نقره - ساچمه‌خانه شیراز</h1>
-            
-            {% if is_configured %}
-                <div class="header-info">
-                    ✅ سیستم فعال
-                    {% if last_update %}
-                        | 🕐 {{ last_update }}
-                    {% endif %}
-                </div>
-            {% else %}
-                <p style="color: #e74c3c; margin: 12px 0;">⚠️ سیستم پیکربندی نشده</p>
-                <a href="/setup" class="setup-link">⚙️ پیکربندی سیستم</a>
-            {% endif %}
-        </div>
-        
-        {% if prices %}
-            <div class="prices-table-wrapper">
-                <table class="prices-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 50%;">ساچمه نقره</th>
-                            <th style="width: 25%;">بخرید</th>
-                            <th style="width: 25%;">بفروشید</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for price in prices[:9] %}
-                            <tr {% if not price.is_active %}class="inactive"{% endif %}>
-                                <td class="product-name">
-                                    {{ price.name }}
-                                    <span class="status-badge {% if price.is_active %}badge-active{% else %}badge-inactive{% endif %}">
-                                        {{ price.status_text }}
-                                    </span>
-                                </td>
-                                <td class="price-cell price-buy">
-                                    {{ "{:,}".format(price.buy_price) }}
-                                </td>
-                                <td class="price-cell price-sell">
-                                    {{ "{:,}".format(price.sell_price) }}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="no-data">
-                <h2>📭 داده‌ای موجود نیست</h2>
-                <p>لطفاً ابتدا سیستم را پیکربندی کنید</p>
-                {% if not is_configured %}
-                    <a href="/setup" class="setup-link" style="margin-top: 20px;">⚙️ پیکربندی سیستم</a>
+<div class="container">
+    <div class="header">
+        <h1>💎 قیمت نقره - ساچمه‌خانه شیراز</h1>
+        {% if is_configured %}
+            <div class="header-info">
+                ✅ سیستم فعال
+                {% if last_update %}
+                    | 🕐 {{ last_update }}
                 {% endif %}
             </div>
-        {% endif %}
-        
-        {% if is_configured %}
-            <button class="refresh-btn" onclick="refreshPrices()">🔄 بروزرسانی</button>
+        {% else %}
+            <p style="color:#e74c3c;margin:12px 0;">⚠️ سیستم پیکربندی نشده</p>
+            <a href="/setup" class="setup-link">⚙️ پیکربندی سیستم</a>
         {% endif %}
     </div>
-    
-    <script>
-        async function refreshPrices() {
-            const btn = document.querySelector('.refresh-btn');
-            btn.disabled = true;
-            btn.textContent = '⏳ در حال بروزرسانی...';
-            
-            try {
-                const response = await fetch('/api/refresh');
-                const data = await response.json();
-                
-                if (data.success) {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    alert('خطا در بروزرسانی');
-                    btn.disabled = false;
-                    btn.textContent = '🔄 بروزرسانی';
-                }
-            } catch (error) {
-                alert('خطا در بروزرسانی');
-                btn.disabled = false;
-                btn.textContent = '🔄 بروزرسانی';
-            }
+
+    {% if prices %}
+        <div class="prices-table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:50%;">ساچمه نقره</th>
+                    <th style="width:25%;">بخرید</th>
+                    <th style="width:25%;">بفروشید</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for price in prices[:9] %}
+                    <tr {% if not price.is_active %}class="inactive"{% endif %}>
+                        <td class="product-name">
+                            {{ price.name }}
+                            <span class="status-badge {% if price.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                                {{ price.status_text }}
+                            </span>
+                        </td>
+                        <td class="price-cell price-buy">
+                            {{ "{:,}".format(price.buy_price) }}
+                        </td>
+                        <td class="price-cell price-sell">
+                            {{ "{:,}".format(price.sell_price) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="no-data">
+            <h2>📭 داده‌ای موجود نیست</h2>
+            <p>لطفاً ابتدا سیستم را پیکربندی کنید</p>
+            {% if not is_configured %}
+                <a href="/setup" class="setup-link" style="margin-top:20px;">⚙️ پیکربندی سیستم</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if is_configured %}
+        <button class="refresh-btn" onclick="refreshPrices()">🔄 بروزرسانی</button>
+    {% endif %}
+</div>
+
+<script>
+async function refreshPrices(){
+    const btn=document.querySelector('.refresh-btn');
+    btn.disabled=true;
+    btn.textContent='⏳ در حال بروزرسانی...';
+    try{
+        const res=await fetch('/api/refresh');
+        const data=await res.json();
+        if(data.success){
+            setTimeout(()=>location.reload(),1000);
+        }else{
+            alert('خطا در بروزرسانی');
+            btn.disabled=false;
+            btn.textContent='🔄 بروزرسانی';
         }
-        
-        setInterval(() => {
-            window.location.reload();
-        }, 5 * 60 * 1000);
-    </script>
+    }catch(e){
+        alert('خطا در بروزرسانی');
+        btn.disabled=false;
+        btn.textContent='🔄 بروزرسانی';
+    }
+}
+setInterval(()=>location.reload(),5*60*1000);
+</script>
 </body>
 </html>
