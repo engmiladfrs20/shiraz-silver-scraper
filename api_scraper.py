@@ -65,7 +65,7 @@ class ShirazSilverAPI:
         """
         دریافت لیست نقره (فقط ۹ ردیف)
         
-        منطق قیمت‌گذاری:
+        منطق قیمت‌گذاری (همه قیمت‌ها به تومان هستند):
         - سه ردیف: ساچمه عیار 999.9، ساچمه عیار 999، ساچمه عیار 995
           buy_price_base  → از buy_price_gheram
           sell_price_base → از sell_price_gheram
@@ -125,19 +125,19 @@ class ShirazSilverAPI:
 
                 # تشخیص اینکه از کدام فیلد استفاده کنیم
                 if title in special_titles:
-                    # برای سه ردیف خاص: از gheram
+                    # برای سه ردیف خاص: از gheram (تومان)
                     buy_base = int(it.get("buy_price_gheram", 0))
                     sell_base = int(it.get("sell_price_gheram", 0))
+                    print(f"✅ {title} (gheram) → buy={buy_base:,}, sell={sell_base:,}")
                 else:
-                    # برای بقیه: از buy_price و sell_price
+                    # برای بقیه: از buy_price و sell_price (تومان)
                     buy_base = int(it.get("buy_price", 0))
                     sell_base = int(it.get("sell_price", 0))
+                    print(f"📊 {title} (standard) → buy={buy_base:,}, sell={sell_base:,}")
 
                 b_status = 1 if info.get("buy_status", 1) and buy_status_global else 0
                 s_status = 1 if info.get("sell_status", 1) and sell_status_global else 0
                 is_active = bool(b_status or s_status)
-
-                print(f"{title} → buy={buy_base}, sell={sell_base}")
 
                 prices.append({
                     "id": sid,
