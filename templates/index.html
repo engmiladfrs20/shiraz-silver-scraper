@@ -46,7 +46,7 @@
         h1 {
             text-align: center;
             font-size: 2.5rem;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             text-shadow: 0 4px 10px rgba(0,0,0,0.8);
             font-weight: 900;
             letter-spacing: -1px;
@@ -166,10 +166,10 @@
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 20px;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .info-section.error {
@@ -250,7 +250,7 @@
             <div class="info-section">
                 ✅ سیستم فعال
                 {% if last_update %}
-                    | 🕐 آخرین بروزرسانی: {{ last_update }}
+                    | 🕐 آخرین بروزرسانی: <span id="last-update">{{ last_update }}</span>
                 {% endif %}
             </div>
         {% else %}
@@ -269,18 +269,20 @@
                 <div class="header-item">فروش (تومان)</div>
             </div>
 
-            {% for price in prices[:9] %}
-                <div class="row-card {% if not price.is_active %}inactive{% endif %}">
-                    <div class="col product">
-                        {{ price.name }}
-                        <span class="status-badge {% if not price.is_active %}inactive{% endif %}">
-                            {{ price.status_text }}
-                        </span>
+            <div id="prices-container">
+                {% for price in prices[:9] %}
+                    <div class="row-card {% if not price.is_active %}inactive{% endif %}" data-id="{{ price.id }}">
+                        <div class="col product">
+                            {{ price.name }}
+                            <span class="status-badge {% if not price.is_active %}inactive{% endif %}">
+                                {{ price.status_text }}
+                            </span>
+                        </div>
+                        <div class="price-box price-buy price-buy-{{ price.id }}">{{ "{:,}".format(price.buy_price) }}</div>
+                        <div class="price-box price-sell price-sell-{{ price.id }}">{{ "{:,}".format(price.sell_price) }}</div>
                     </div>
-                    <div class="price-box price-buy">{{ "{:,}".format(price.buy_price) }}</div>
-                    <div class="price-box price-sell">{{ "{:,}".format(price.sell_price) }}</div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
 
         {% else %}
             <div class="info-section error">
@@ -293,7 +295,7 @@
         {% endif %}
 
         {% if is_configured %}
-            <button class="refresh-btn" onclick="refreshPrices()">
+            <button class="refresh-btn" onclick="manualRefresh()">
                 <i class="fa-solid fa-rotate"></i> بروزرسانی
             </button>
         {% endif %}
@@ -302,7 +304,43 @@
     </div>
 
     <script>
-        async function refreshPrices() {
+        let autoUpdateInterval;
+
+        // بروزرسانی خودکار هر 10 دقیقه (بدون رفرش صفحه)
+        async function autoUpdate() {
+            try {
+                const res = await fetch('/api/prices');
+                const data = await res.json();
+                
+                if (data.success && data.prices && data.prices.length > 0) {
+                    // بروزرسانی قیمت‌ها
+                    data.prices.forEach(price => {
+                        const buyEl = document.querySelector(`.price-buy-${price.id}`);
+                        const sellEl = document.querySelector(`.price-sell-${price.id}`);
+                        if (buyEl) buyEl.textContent = price.buy_price.toLocaleString('fa-IR');
+                        if (sellEl) sellEl.textContent = price.sell_price.toLocaleString('fa-IR');
+                    });
+                    
+                    // بروزرسانی تاریخ
+                    const updateEl = document.getElementById('last-update');
+                    if (updateEl && data.last_update) {
+                        updateEl.textContent = data.last_update;
+                    }
+                    
+                    console.log('✅ قیمت‌ها بروز شدند:', data.last_update);
+                }
+                
+                // چک کردن اگر نیاز به لاگین مجدد باشد
+                if (!data.is_configured) {
+                    window.location.href = '/setup';
+                }
+            } catch (e) {
+                console.error('خطا در بروزرسانی خودکار:', e);
+            }
+        }
+
+        // بروزرسانی دستی
+        async function manualRefresh() {
             const btn = document.querySelector('.refresh-btn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال بروزرسانی...';
@@ -311,9 +349,20 @@
                 const res = await fetch('/api/refresh');
                 const data = await res.json();
                 
+                if (res.status === 401 || data.redirect) {
+                    // نیاز به لاگین مجدد
+                    window.location.href = '/setup';
+                    return;
+                }
+                
                 if (data.success) {
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> موفق';
-                    setTimeout(() => location.reload(), 1000);
+                    // منتظر بمانیم تا قیمت‌ها آپدیت شوند
+                    setTimeout(async () => {
+                        await autoUpdate();
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-rotate"></i> بروزرسانی';
+                    }, 2000);
                 } else {
                     alert('خطا در بروزرسانی');
                     btn.disabled = false;
@@ -326,8 +375,10 @@
             }
         }
 
-        // بروزرسانی خودکار هر 5 دقیقه
-        setInterval(() => location.reload(), 5 * 60 * 1000);
+        // شروع بروزرسانی خودکار هر 10 دقیقه
+        autoUpdateInterval = setInterval(autoUpdate, 10 * 60 * 1000);
+        
+        console.log('✅ بروزرسانی خودکار فعال شد (هر 10 دقیقه)');
     </script>
 </body>
 </html>
