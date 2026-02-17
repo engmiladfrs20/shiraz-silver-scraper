@@ -1,13 +1,11 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from scraper import ShirazSilverScraper
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from api_scraper import ShirazSilverAPI
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
-import json
 import os
 import threading
 import logging
 import sys
-import time
 
 # تنظیم logging
 logging.basicConfig(
@@ -33,7 +31,7 @@ data_store = {
     'sms_requested': False
 }
 
-scraper = ShirazSilverScraper()
+api_scraper = ShirazSilverAPI()
 update_lock = threading.Lock()
 
 def update_prices_job():
@@ -50,18 +48,23 @@ def update_prices_job():
     try:
         logger.info(f"🔄 شروع بروزرسانی قیمت‌ها...")
         
-        result = scraper.get_silver_prices()
+        result = api_scraper.get_silver_prices()
         
         if result['success'] and result['prices']:
             updated_prices = []
             for item in result['prices']:
                 updated_item = item.copy()
-                updated_item['buy_price_original'] = item['buy_price']
-                updated_item['sell_price_original'] = item['sell_price']
+                
+                # اعمال درصد افزایش
+                buy_price = item.get('buy_price', 0) or item.get('buyPrice', 0) or item.get('price', 0)
+                sell_price = item.get('sell_price', 0) or item.get('sellPrice', 0) or item.get('price', 0)
+                
+                updated_item['buy_price_original'] = buy_price
+                updated_item['sell_price_original'] = sell_price
                 
                 increase = data_store['increase_percentage']
-                updated_item['buy_price'] = int(item['buy_price'] * (1 + increase / 100))
-                updated_item['sell_price'] = int(item['sell_price'] * (1 + increase / 100))
+                updated_item['buy_price'] = int(buy_price * (1 + increase / 100))
+                updated_item['sell_price'] = int(sell_price * (1 + increase / 100))
                 updated_item['increase_percentage'] = increase
                 
                 updated_prices.append(updated_item)
@@ -108,145 +111,16 @@ def setup():
             logger.info(f"درصد افزایش: {increase_pct}%")
             logger.info("="*60)
             
-            # اجرای Selenium در thread جداگانه برای جلوگیری از timeout
-            def selenium_task():
-                try:
-                    logger.info("🔧 شروع راه‌اندازی Selenium...")
-                    scraper.setup_driver()
-                    logger.info("✅ Selenium driver ساخته شد")
-                    
-                    logger.info(f"🌐 در حال باز کردن سایت: {scraper.base_url}")
-                    scraper.driver.get(scraper.base_url)
-                    logger.info(f"✅ سایت بارگذاری شد: {scraper.driver.current_url}")
-                    
-                    from selenium.webdriver.common.by import By
-                    from selenium.webdriver.support.ui import WebDriverWait
-                    from selenium.webdriver.support import expected_conditions as EC
-                    from selenium.webdriver.common.keys import Keys
-                    from selenium.common.exceptions import NoAlertPresentException
-                    
-                    time.sleep(3)
-                    
-                    logger.info(f"📸 Title صفحه: {scraper.driver.title}")
-                    
-                    # بستن popup
-                    try:
-                        logger.info("🚫 بستن popup...")
-                        scraper.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
-                        time.sleep(1)
-                        logger.info("✅ ESC فشرده شد")
-                    except Exception as e:
-                        logger.warning(f"⚠️ popup: {str(e)[:50]}")
-                    
-                    time.sleep(1)
-                    
-                    # پیدا کردن input موبایل
-                    mobile_selectors = [
-                        "//input[@name='mobile']",
-                        "//input[@type='tel']",
-                        "//input[contains(@placeholder, 'موبایل')]",
-                    ]
-                    
-                    mobile_input = None
-                    for idx, selector in enumerate(mobile_selectors):
-                        try:
-                            mobile_input = WebDriverWait(scraper.driver, 2).until(
-                                EC.presence_of_element_located((By.XPATH, selector))
-                            )
-                            logger.info(f"✅ فیلد موبایل پیدا شد")
-                            break
-                        except:
-                            continue
-                    
-                    if mobile_input:
-                        mobile_input.clear()
-                        mobile_input.send_keys(mobile)
-                        logger.info(f"✅ شماره {mobile} وارد شد")
-                        
-                        time.sleep(1)
-                        
-                        # کلیک submit با JavaScript
-                        try:
-                            submit_btn = scraper.driver.find_element(By.XPATH, "//button[@type='submit']")
-                            scraper.driver.execute_script("arguments[0].click();", submit_btn)
-                            logger.info("✅ دکمه کلیک شد")
-                        except Exception as e:
-                            logger.error(f"❌ کلیک: {str(e)[:50]}")
-                            mobile_input.send_keys(Keys.RETURN)
-                            logger.info("✅ Enter فشرده شد")
-                        
-                        time.sleep(3)
-                        
-                        # بررسی نتیجه
-                        current_url = scraper.driver.current_url
-                        logger.info(f"🌐 URL: {current_url}")
-                        
-                        # چک alert
-                        try:
-                            alert = scraper.driver.switch_to.alert
-                            alert_text = alert.text
-                            logger.info(f"⚠️ Alert: {alert_text}")
-                            alert.accept()
-                        except NoAlertPresentException:
-                            logger.info("ℹ️ بدون alert")
-                        except Exception as e:
-                            logger.info(f"ℹ️ alert check: {str(e)[:30]}")
-                        
-                        # چک فیلد کد
-                        try:
-                            code_field = scraper.driver.find_element(By.XPATH, "//input[contains(@placeholder, 'کد') or @name='code']")
-                            if code_field.is_displayed():
-                                logger.info("✅✅✅ فیلد کد ظاهر شد - SMS ارسال شده!")
-                                data_store['sms_requested'] = True
-                            else:
-                                logger.warning("⚠️ فیلد کد نمایش نمی‌شود")
-                        except:
-                            logger.warning("❌ فیلد کد پیدا نشد - SMS احتمالاً ارسال نشده")
-                            
-                            # چاپ HTML برای دیباگ
-                            logger.info("📄 HTML (اول 1500 کاراکتر):")
-                            logger.info(scraper.driver.page_source[:1500])
-                        
-                        # لیست تمام input ها
-                        try:
-                            all_inputs = scraper.driver.find_elements(By.XPATH, "//input")
-                            logger.info(f"📊 تعداد input: {len(all_inputs)}")
-                            for i, inp in enumerate(all_inputs[:5]):
-                                try:
-                                    if inp.is_displayed():
-                                        logger.info(f"  Input {i+1}: type={inp.get_attribute('type')}, name={inp.get_attribute('name')}, placeholder={inp.get_attribute('placeholder')}")
-                                except:
-                                    pass
-                        except Exception as e:
-                            logger.info(f"خطا در لیست inputs: {str(e)[:50]}")
-                        
-                        # بستن browser برای آزاد کردن RAM
-                        logger.info("🔄 بستن browser...")
-                        scraper.close()
-                        logger.info("✅ Browser بسته شد - RAM آزاد شد")
-                        
-                    else:
-                        logger.error("❌ فیلد موبایل پیدا نشد")
-                        scraper.close()
-                    
-                except Exception as e:
-                    logger.error(f"❌ خطای Selenium: {e}", exc_info=True)
-                    try:
-                        scraper.close()
-                    except:
-                        pass
+            # ارسال OTP با API
+            result = api_scraper.send_otp(mobile)
             
-            # شروع thread
-            thread = threading.Thread(target=selenium_task)
-            thread.daemon = True
-            thread.start()
-            
-            # صبر کوتاه (2 ثانیه) و بعد redirect
-            # Selenium در پس‌زمینه ادامه می‌دهد
-            time.sleep(2)
-            
-            logger.info("⏭️ Redirect به صفحه verify (Selenium در پس‌زمینه ادامه دارد)")
-            return redirect(url_for('verify'))
+            if result['success']:
+                logger.info(f"✅✅✅ SMS به شماره {mobile} ارسال شد!")
+                data_store['sms_requested'] = True
+                return redirect(url_for('verify'))
+            else:
+                logger.error(f"❌ خطا در ارسال SMS: {result['message']}")
+                return render_template('setup.html', error=result['message'])
             
         except Exception as e:
             logger.error(f"❌ خطای کلی در setup: {e}", exc_info=True)
@@ -270,73 +144,30 @@ def verify():
             logger.info(f"کد وارد شده: {verification_code}")
             logger.info("="*60)
             
-            try:
-                from selenium.webdriver.common.by import By
+            # تایید OTP با API
+            result = api_scraper.verify_otp(mobile, verification_code)
+            
+            if result['success']:
+                logger.info(f"✅✅✅ ورود موفق!")
+                data_store['is_configured'] = True
                 
-                # چک کردن اگر driver هنوز باز است
-                if not scraper.driver:
-                    logger.error("❌ Driver بسته شده - نیاز به راه‌اندازی مجدد")
-                    scraper.setup_driver()
-                    scraper.driver.get(scraper.base_url)
-                    time.sleep(3)
+                # اولین بروزرسانی
+                update_prices_job()
                 
-                code_inputs = scraper.driver.find_elements(By.XPATH, "//input")
-                logger.info(f"📝 تعداد input پیدا شده: {len(code_inputs)}")
-                
-                if len(code_inputs) >= 6:
-                    logger.info(f"📝 وارد کردن کد در 6 فیلد جداگانه")
-                    for i, digit in enumerate(verification_code[:6]):
-                        code_inputs[i].clear()
-                        code_inputs[i].send_keys(digit)
-                        time.sleep(0.2)
-                elif len(code_inputs) > 0:
-                    logger.info(f"📝 وارد کردن کد در آخرین فیلد")
-                    code_inputs[-1].clear()
-                    code_inputs[-1].send_keys(verification_code)
-                else:
-                    logger.error("❌ هیچ input پیدا نشد!")
-                
-                time.sleep(3)
-                
-                try:
-                    confirm_btn = scraper.driver.find_element(By.XPATH, "//button[contains(text(), 'تایید') or contains(text(), 'ورود')]")
-                    confirm_btn.click()
-                    logger.info(f"✅ دکمه تایید کلیک شد")
-                except Exception as e:
-                    logger.warning(f"⚠️ دکمه تایید: {str(e)[:50]}")
-                
-                time.sleep(5)
-                
-                current_url = scraper.driver.current_url
-                logger.info(f"🌐 URL بعد از تایید: {current_url}")
-                
-                if 'login' not in current_url.lower():
-                    scraper.save_session()
-                    scraper.is_logged_in = True
-                    data_store['is_configured'] = True
-                    logger.info(f"✅✅✅ ورود موفق!")
-                    
-                    scraper.close()
-                    update_prices_job()
-                    
-                    return redirect(url_for('index'))
-                else:
-                    logger.error(f"❌ ورود ناموفق")
-                    return render_template('verify.html', 
-                                         mobile=mobile, 
-                                         error='کد نادرست است یا منقضی شده')
-                    
-            except Exception as e:
-                logger.error(f"❌ خطا در تایید کد: {e}", exc_info=True)
+                return redirect(url_for('index'))
+            else:
+                logger.error(f"❌ کد نادرست: {result['message']}")
                 return render_template('verify.html', 
                                      mobile=mobile, 
-                                     error=f'خطا: {str(e)}')
+                                     error=result['message'],
+                                     sms_sent=data_store.get('sms_requested', False))
                 
         except Exception as e:
             logger.error(f"❌ خطای کلی در verify: {e}", exc_info=True)
             return render_template('verify.html', 
                                  mobile=data_store.get('mobile_number'), 
-                                 error=str(e))
+                                 error=str(e),
+                                 sms_sent=data_store.get('sms_requested', False))
     
     return render_template('verify.html', 
                           mobile=data_store.get('mobile_number'),
