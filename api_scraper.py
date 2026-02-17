@@ -93,7 +93,6 @@ class ShirazSilverAPI:
             response = self.session.post(url, json=payload, timeout=30)
             
             print(f"📊 Status Code: {response.status_code}")
-            print(f"📄 Response: {response.text[:500]}")
             
             if response.status_code == 200:
                 data = response.json()
@@ -135,54 +134,68 @@ class ShirazSilverAPI:
     def get_silver_prices(self):
         """دریافت قیمت‌های نقره"""
         try:
-            # endpoint های احتمالی
-            endpoints = [
-                "/products",
-                "/products/list",
-                "/items",
-                "/gold-silver/prices",
-                "/price/list"
-            ]
+            # Endpoint صحیح: homepage
+            url = f"{self.base_url}/profile/homepage"
             
-            for endpoint in endpoints:
-                try:
-                    url = f"{self.base_url}{endpoint}"
-                    print(f"🔄 تلاش دریافت قیمت‌ها از: {endpoint}")
+            print(f"🔄 دریافت قیمت‌ها از: {url}")
+            
+            response = self.session.get(url, timeout=30)
+            
+            print(f"📊 Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('success'):
+                    # استخراج قیمت‌های نقره از response
+                    silver_prices = data.get('data', {}).get('features_data', {}).get('silver', [])
                     
-                    response = self.session.get(url, timeout=30)
-                    
-                    if response.status_code == 200:
-                        data = response.json()
+                    if silver_prices:
+                        print(f"✅ قیمت‌ها دریافت شد: {len(silver_prices)} محصول نقره")
                         
-                        # بررسی ساختار response
-                        prices_data = None
-                        if isinstance(data, dict):
-                            if data.get('success') and data.get('data'):
-                                prices_data = data['data']
-                            elif 'products' in data:
-                                prices_data = data['products']
-                            elif 'items' in data:
-                                prices_data = data['items']
-                        elif isinstance(data, list):
-                            prices_data = data
-                        
-                        if prices_data:
-                            print(f"✅ قیمت‌ها دریافت شد: {len(prices_data)} محصول")
-                            return {
-                                'success': True,
-                                'prices': prices_data,
-                                'message': 'قیمت‌ها با موفقیت دریافت شد'
+                        # فرمت کردن داده‌ها
+                        formatted_prices = []
+                        for item in silver_prices:
+                            formatted_item = {
+                                'id': item.get('id'),
+                                'title': item.get('title', ''),
+                                'name': item.get('title', ''),
+                                'buy_price': int(item.get('buy_price', 0)),
+                                'sell_price': int(item.get('sell_price', 0)),
+                                'buy_price_gheram': int(item.get('buy_price_gheram', 0)),
+                                'sell_price_gheram': int(item.get('sell_price_gheram', 0)),
+                                'change': float(item.get('change', 0)),
+                                'currency_group_title': item.get('currency_group_title', ''),
+                                'silver_type': item.get('silver_type'),
+                                'buy_status': item.get('buy_status', 1),
+                                'sell_status': item.get('sell_status', 1)
                             }
-                except Exception as e:
-                    print(f"⚠️ خطا در endpoint {endpoint}: {str(e)[:50]}")
-                    continue
-            
-            print("❌ هیچ endpoint برای قیمت‌ها کار نکرد")
-            return {
-                'success': False,
-                'prices': [],
-                'message': 'خطا در دریافت قیمت‌ها - endpoint پیدا نشد'
-            }
+                            formatted_prices.append(formatted_item)
+                        
+                        return {
+                            'success': True,
+                            'prices': formatted_prices,
+                            'message': 'قیمت‌ها با موفقیت دریافت شد'
+                        }
+                    else:
+                        print("⚠️ آرایه قیمت‌ها خالی است")
+                        return {
+                            'success': False,
+                            'prices': [],
+                            'message': 'قیمت‌ها یافت نشد'
+                        }
+                else:
+                    return {
+                        'success': False,
+                        'prices': [],
+                        'message': data.get('message', 'خطا در دریافت قیمت‌ها')
+                    }
+            else:
+                return {
+                    'success': False,
+                    'prices': [],
+                    'message': f'خطای HTTP {response.status_code}'
+                }
                 
         except Exception as e:
             print(f"❌ خطا در دریافت قیمت‌ها: {e}")
@@ -198,7 +211,7 @@ if __name__ == "__main__":
     api = ShirazSilverAPI()
     
     # تست ارسال OTP
-    mobile = "09017812729"
+    mobile = "09175398651"
     result = api.send_otp(mobile)
     print(f"\n📋 نتیجه send_otp: {result}")
     
@@ -210,5 +223,12 @@ if __name__ == "__main__":
         
         if verify_result['success']:
             print("\n🎉 ورود موفق! حال دریافت قیمت‌ها...")
-            prices = api.get_silver_prices()
-            print(f"\n📊 قیمت‌ها: {prices}")
+            
+            prices_result = api.get_silver_prices()
+            print(f"\n📊 تعداد محصولات: {len(prices_result.get('prices', []))}")
+            
+            if prices_result['success']:
+                for price in prices_result['prices'][:5]:  # نمایش 5 محصول اول
+                    print(f"\n{price['title']}:")
+                    print(f"  قیمت خرید: {price['buy_price']:,} ریال")
+                    print(f"  قیمت فروش: {price['sell_price']:,} ریال")
