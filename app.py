@@ -7,20 +7,16 @@ import threading
 import logging
 import sys
 
-# تنظیم logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-in-production-12345')
 
-# داده‌های global
 data_store = {
     'prices': [],
     'last_update': None,
@@ -40,9 +36,8 @@ def update_prices_job():
     
     with update_lock:
         if data_store['is_updating']:
-            logger.info("⏳ بروزرسانی قبلی هنوز در حال اجراست")
+            logger.info("⏳ بروزرسانی قبلی در حال اجراست")
             return
-        
         data_store['is_updating'] = True
     
     try:
@@ -51,30 +46,10 @@ def update_prices_job():
         result = api_scraper.get_silver_prices()
         
         if result['success'] and result['prices']:
-            updated_prices = []
-            increase = data_store['increase_percentage']
-            
-            for item in result['prices']:
-                updated_item = item.copy()
-                
-                # قیمت‌های اصلی (تومان)
-                buy_price = item.get('buy_price', 0)
-                sell_price = item.get('sell_price', 0)
-                
-                # ذخیره قیمت اصلی
-                updated_item['buy_price_original'] = buy_price
-                updated_item['sell_price_original'] = sell_price
-                
-                # اعمال درصد افزایش
-                updated_item['buy_price'] = int(buy_price * (1 + increase / 100))
-                updated_item['sell_price'] = int(sell_price * (1 + increase / 100))
-                updated_item['increase_percentage'] = increase
-                
-                updated_prices.append(updated_item)
-            
-            data_store['prices'] = updated_prices
+            # استفاده مستقیم از قیمت‌ها (بدون افزایش درصد)
+            data_store['prices'] = result['prices']
             data_store['last_update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            logger.info(f"✅ قیمت‌ها بروزرسانی شد: {len(updated_prices)} محصول")
+            logger.info(f"✅ قیمت‌ها بروزرسانی شد: {len(result['prices'])} محصول")
         else:
             logger.warning(f"⚠️ خطا در بروزرسانی: {result.get('message', 'نامشخص')}")
             
@@ -83,7 +58,6 @@ def update_prices_job():
     finally:
         data_store['is_updating'] = False
 
-# Scheduler
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(func=update_prices_job, trigger="interval", minutes=30, id='update_prices')
 scheduler.start()
@@ -94,31 +68,23 @@ def index():
     return render_template('index.html', 
                          prices=data_store['prices'],
                          last_update=data_store['last_update'],
-                         increase_percentage=data_store['increase_percentage'],
                          is_configured=data_store['is_configured'])
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
-    """صفحه تنظیمات اولیه"""
+    """صفحه تنظیمات"""
     if request.method == 'POST':
         try:
             mobile = request.form.get('mobile')
-            increase_pct = float(request.form.get('increase_percentage', 0))
             
             data_store['mobile_number'] = mobile
-            data_store['increase_percentage'] = increase_pct
             
-            logger.info("="*60)
-            logger.info(f"📱 درخواست ارسال کد SMS")
-            logger.info(f"شماره: {mobile}")
-            logger.info(f"درصد افزایش: {increase_pct}%")
-            logger.info("="*60)
+            logger.info(f"📱 درخواست ارسال SMS به: {mobile}")
             
-            # ارسال OTP با API
             result = api_scraper.send_otp(mobile)
             
             if result['success']:
-                logger.info(f"✅✅✅ SMS به شماره {mobile} ارسال شد!")
+                logger.info(f"✅ SMS ارسال شد")
                 data_store['sms_requested'] = True
                 return redirect(url_for('verify'))
             else:
@@ -126,14 +92,14 @@ def setup():
                 return render_template('setup.html', error=result['message'])
             
         except Exception as e:
-            logger.error(f"❌ خطای کلی در setup: {e}", exc_info=True)
+            logger.error(f"❌ خطا: {e}", exc_info=True)
             return render_template('setup.html', error=str(e))
     
     return render_template('setup.html')
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
-    """صفحه تایید کد SMS"""
+    """صفحه تایید کد"""
     if request.method == 'POST':
         try:
             verification_code = request.form.get('code')
@@ -142,31 +108,24 @@ def verify():
             if not mobile:
                 return redirect(url_for('setup'))
             
-            logger.info("="*60)
-            logger.info(f"🔢 تایید کد SMS")
-            logger.info(f"کد وارد شده: {verification_code}")
-            logger.info("="*60)
+            logger.info(f"🔢 تایید کد: {verification_code}")
             
-            # تایید OTP با API
             result = api_scraper.verify_otp(mobile, verification_code)
             
             if result['success']:
-                logger.info(f"✅✅✅ ورود موفق!")
+                logger.info(f"✅ ورود موفق")
                 data_store['is_configured'] = True
-                
-                # اولین بروزرسانی
                 update_prices_job()
-                
                 return redirect(url_for('index'))
             else:
-                logger.error(f"❌ کد نادرست: {result['message']}")
+                logger.error(f"❌ کد نادرست")
                 return render_template('verify.html', 
                                      mobile=mobile, 
                                      error=result['message'],
                                      sms_sent=data_store.get('sms_requested', False))
                 
         except Exception as e:
-            logger.error(f"❌ خطای کلی در verify: {e}", exc_info=True)
+            logger.error(f"❌ خطا: {e}", exc_info=True)
             return render_template('verify.html', 
                                  mobile=data_store.get('mobile_number'), 
                                  error=str(e),
@@ -183,7 +142,6 @@ def get_prices():
         'success': True,
         'prices': data_store['prices'],
         'last_update': data_store['last_update'],
-        'increase_percentage': data_store['increase_percentage'],
         'is_configured': data_store['is_configured']
     })
 
