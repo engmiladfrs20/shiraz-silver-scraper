@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from scraper import ShirazSilverScraper
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
@@ -16,7 +16,8 @@ data_store = {
     'increase_percentage': 0,
     'mobile_number': None,
     'is_configured': False,
-    'is_updating': False
+    'is_updating': False,
+    'sms_requested': False
 }
 
 scraper = ShirazSilverScraper()
@@ -89,8 +90,76 @@ def setup():
             data_store['mobile_number'] = mobile
             data_store['increase_percentage'] = increase_pct
             
+            print(f"\n{'='*60}")
+            print(f"📱 درخواست ارسال کد SMS")
+            print(f"{'='*60}")
+            print(f"شماره: {mobile}")
+            print(f"درصد افزایش: {increase_pct}%")
+            print(f"{'='*60}\n")
+            
+            # اجرای Selenium برای درخواست کد
+            try:
+                scraper.setup_driver()
+                scraper.driver.get(scraper.base_url)
+                print(f"✅ سایت بارگذاری شد: {scraper.driver.current_url}")
+                
+                # پیدا کردن فیلد موبایل و ارسال
+                from selenium.webdriver.common.by import By
+                from selenium.webdriver.support.ui import WebDriverWait
+                from selenium.webdriver.support import expected_conditions as EC
+                import time
+                
+                time.sleep(3)
+                
+                # تلاش برای پیدا کردن input موبایل
+                mobile_selectors = [
+                    "//input[@type='tel']",
+                    "//input[@name='mobile']",
+                    "//input[contains(@placeholder, 'موبایل')]",
+                ]
+                
+                mobile_input = None
+                for selector in mobile_selectors:
+                    try:
+                        mobile_input = WebDriverWait(scraper.driver, 5).until(
+                            EC.presence_of_element_located((By.XPATH, selector))
+                        )
+                        print(f"✅ فیلد موبایل پیدا شد")
+                        break
+                    except:
+                        continue
+                
+                if mobile_input:
+                    mobile_input.clear()
+                    mobile_input.send_keys(mobile)
+                    print(f"✅ شماره {mobile} وارد شد")
+                    
+                    time.sleep(2)
+                    
+                    # کلیک روی دکمه ارسال
+                    try:
+                        submit_btn = scraper.driver.find_element(By.XPATH, "//button[@type='submit']")
+                        submit_btn.click()
+                        print(f"✅ دکمه ارسال کلیک شد")
+                        print(f"📧 کد SMS به شماره {mobile} ارسال شد!")
+                        data_store['sms_requested'] = True
+                    except Exception as e:
+                        print(f"⚠️ خطا در کلیک دکمه: {e}")
+                else:
+                    print(f"❌ فیلد موبایل پیدا نشد")
+                    print(f"HTML صفحه:\n{scraper.driver.page_source[:500]}")
+                
+                time.sleep(3)
+                
+            except Exception as e:
+                print(f"❌ خطا در Selenium: {e}")
+                import traceback
+                print(traceback.format_exc())
+            
             return redirect(url_for('verify'))
+            
         except Exception as e:
+            print(f"❌ خطای کلی: {e}")
             return render_template('setup.html', error=str(e))
     
     return render_template('setup.html')
@@ -106,24 +175,81 @@ def verify():
             if not mobile:
                 return redirect(url_for('setup'))
             
-            # ورود با کد
-            success = scraper.login_with_code(mobile, verification_code)
+            print(f"\n{'='*60}")
+            print(f"🔢 تایید کد SMS")
+            print(f"{'='*60}")
+            print(f"کد وارد شده: {verification_code}")
+            print(f"{'='*60}\n")
             
-            if success:
-                data_store['is_configured'] = True
-                # اولین بروزرسانی
-                update_prices_job()
-                return redirect(url_for('index'))
-            else:
+            # وارد کردن کد در Selenium
+            try:
+                from selenium.webdriver.common.by import By
+                import time
+                
+                # پیدا کردن فیلد کد
+                code_inputs = scraper.driver.find_elements(By.XPATH, "//input[@type='text' or @type='tel']")
+                
+                if len(code_inputs) >= 6:
+                    # 6 فیلد جداگانه
+                    print(f"📝 وارد کردن کد در 6 فیلد جداگانه")
+                    for i, digit in enumerate(verification_code[:6]):
+                        code_inputs[i].clear()
+                        code_inputs[i].send_keys(digit)
+                        time.sleep(0.2)
+                else:
+                    # یک فیلد
+                    print(f"📝 وارد کردن کد در یک فیلد")
+                    code_inputs[-1].clear()  # آخرین input
+                    code_inputs[-1].send_keys(verification_code)
+                
+                time.sleep(2)
+                
+                # کلیک دکمه تایید
+                try:
+                    confirm_btn = scraper.driver.find_element(By.XPATH, "//button[contains(text(), 'تایید')]")
+                    confirm_btn.click()
+                    print(f"✅ دکمه تایید کلیک شد")
+                except:
+                    print(f"⚠️ دکمه تایید پیدا نشد - ممکن است خودکار ارسال شود")
+                
+                time.sleep(5)
+                
+                # بررسی موفقیت
+                if 'login' not in scraper.driver.current_url.lower():
+                    scraper.save_session()
+                    scraper.is_logged_in = True
+                    data_store['is_configured'] = True
+                    print(f"✅✅✅ ورود موفق!")
+                    
+                    # بستن driver
+                    scraper.close()
+                    
+                    # اولین بروزرسانی
+                    update_prices_job()
+                    
+                    return redirect(url_for('index'))
+                else:
+                    print(f"❌ کد نادرست یا منقضی شده")
+                    return render_template('verify.html', 
+                                         mobile=mobile, 
+                                         error='کد نادرست است یا منقضی شده')
+                    
+            except Exception as e:
+                print(f"❌ خطا در تایید کد: {e}")
+                import traceback
+                print(traceback.format_exc())
                 return render_template('verify.html', 
                                      mobile=mobile, 
-                                     error='کد نادرست است یا منقضی شده')
+                                     error=f'خطا: {str(e)}')
+                
         except Exception as e:
             return render_template('verify.html', 
                                  mobile=data_store.get('mobile_number'), 
                                  error=str(e))
     
-    return render_template('verify.html', mobile=data_store.get('mobile_number'))
+    return render_template('verify.html', 
+                          mobile=data_store.get('mobile_number'),
+                          sms_sent=data_store.get('sms_requested', False))
 
 @app.route('/api/prices')
 def get_prices():
