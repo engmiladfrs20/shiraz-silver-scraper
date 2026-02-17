@@ -63,9 +63,16 @@ class ShirazSilverAPI:
 
     def get_silver_prices(self):
         """
-        دریافت لیست نقره (فقط ۹ ردیف) با استفاده از:
-        buy_price_gheram  → قیمت خرید (تومان)
-        sell_price_gheram → قیمت فروش (تومان)
+        دریافت لیست نقره (فقط ۹ ردیف)
+        
+        منطق قیمت‌گذاری:
+        - سه ردیف: ساچمه عیار 999.9، ساچمه عیار 999، ساچمه عیار 995
+          buy_price_base  → از buy_price_gheram
+          sell_price_base → از sell_price_gheram
+        
+        - بقیه ردیف‌ها:
+          buy_price_base  → از buy_price
+          sell_price_base → از sell_price
         """
         try:
             url = f"{self.base_url}/profile/homepage"
@@ -102,26 +109,40 @@ class ShirazSilverAPI:
             buy_status_global = main.get("buy_status", 1)
             sell_status_global = main.get("sell_status", 1)
 
+            # سه ردیف خاص که باید از gheram استفاده کنند
+            special_titles = {
+                "ساچمه عیار 999.9",
+                "ساچمه عیار 999",
+                "ساچمه عیار 995",
+            }
+
             prices = []
             for it in user_silvers:
                 sid = it.get("id")
                 info = info_map.get(sid, {})
 
-                # قیمت‌ها از gheram (طبق نتورک، به تومان هستند)
-                buy_base = int(it.get("buy_price_gheram", 0))
-                sell_base = int(it.get("sell_price_gheram", 0))
+                title = info.get("title", "محصول نقره")
+
+                # تشخیص اینکه از کدام فیلد استفاده کنیم
+                if title in special_titles:
+                    # برای سه ردیف خاص: از gheram
+                    buy_base = int(it.get("buy_price_gheram", 0))
+                    sell_base = int(it.get("sell_price_gheram", 0))
+                else:
+                    # برای بقیه: از buy_price و sell_price
+                    buy_base = int(it.get("buy_price", 0))
+                    sell_base = int(it.get("sell_price", 0))
 
                 b_status = 1 if info.get("buy_status", 1) and buy_status_global else 0
                 s_status = 1 if info.get("sell_status", 1) and sell_status_global else 0
                 is_active = bool(b_status or s_status)
 
-                title = info.get("title", "محصول نقره")
                 print(f"{title} → buy={buy_base}, sell={sell_base}")
 
                 prices.append({
                     "id": sid,
                     "name": title,
-                    "buy_price_base": buy_base,   # قیمت اصلی سایت (تومان)
+                    "buy_price_base": buy_base,   # قیمت اصلی (تومان)
                     "sell_price_base": sell_base,
                     "buy_price": buy_base,        # بعداً در app.py درصد روی این اعمال می‌شود
                     "sell_price": sell_base,
