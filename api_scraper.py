@@ -88,7 +88,6 @@ class ShirazSilverAPI:
             }
             
             print(f"🔐 ارسال درخواست verify به: {url}")
-            print(f"📦 Payload: {payload}")
             
             response = self.session.post(url, json=payload, timeout=30)
             
@@ -104,7 +103,7 @@ class ShirazSilverAPI:
                     self.token = data.get('data', {}).get('token')
                     if self.token:
                         self.session.headers['Authorization'] = f"Bearer {self.token}"
-                        print(f"🔑 Token ذخیره شد: {self.token[:50]}...")
+                        print(f"🔑 Token ذخیره شد")
                     
                     self.is_logged_in = True
                     
@@ -134,7 +133,6 @@ class ShirazSilverAPI:
     def get_silver_prices(self):
         """دریافت قیمت‌های نقره"""
         try:
-            # Endpoint صحیح: homepage
             url = f"{self.base_url}/profile/homepage"
             
             print(f"🔄 دریافت قیمت‌ها از: {url}")
@@ -149,7 +147,7 @@ class ShirazSilverAPI:
                 if data.get('success'):
                     main_data = data.get('data', {})
                     
-                    # دریافت user_category_id کاربر
+                    # دریافت user_category_id
                     user_category_id = main_data.get('user_category_id')
                     user_categories = main_data.get('user_categories', [])
                     
@@ -161,46 +159,39 @@ class ShirazSilverAPI:
                             break
                     
                     if not user_category:
-                        print(f"⚠️ دسته کاربر {user_category_id} پیدا نشد")
-                        return {
-                            'success': False,
-                            'prices': [],
-                            'message': 'دسته کاربر پیدا نشد'
-                        }
+                        print(f"⚠️ دسته کاربر پیدا نشد")
+                        return {'success': False, 'prices': [], 'message': 'دسته کاربر پیدا نشد'}
                     
                     # قیمت‌های نقره از دسته کاربر
                     user_silver_prices = user_category.get('silvers', [])
                     
-                    # اطلاعات تکمیلی از features_data.silver
+                    # اطلاعات تکمیلی
                     silver_info = {}
                     for item in main_data.get('features_data', {}).get('silver', []):
                         silver_info[item.get('id')] = item
                     
-                    # وضعیت کلی معاملات
+                    # وضعیت معاملات
                     silver_trade_status = main_data.get('silver_trade_status', 0)
                     buy_status = main_data.get('buy_status', 1)
                     sell_status = main_data.get('sell_status', 1)
                     
                     if user_silver_prices:
-                        print(f"✅ قیمت‌ها دریافت شد: {len(user_silver_prices)} محصول نقره")
-                        print(f"📊 دسته کاربر: {user_category_id}")
-                        print(f"📊 وضعیت کلی معاملات: {'فعال' if silver_trade_status == 1 else 'غیرفعال'}")
+                        print(f"✅ قیمت‌ها دریافت شد: {len(user_silver_prices)} محصول")
                         
-                        # فرمت کردن داده‌ها
                         formatted_prices = []
                         for item in user_silver_prices:
                             silver_id = item.get('id')
                             info = silver_info.get(silver_id, {})
                             
-                            # قیمت‌های از user_category (قیمت واقعی)
+                            # قیمت‌ها به ریال (از user_category)
                             buy_price_rial = int(item.get('buy_price', 0))
                             sell_price_rial = int(item.get('sell_price', 0))
                             
-                            # تبدیل به تومان
+                            # تبدیل به تومان (بدون درصد افزایش)
                             buy_price_toman = buy_price_rial // 10
                             sell_price_toman = sell_price_rial // 10
                             
-                            # وضعیت فعال/غیرفعال
+                            # وضعیت
                             item_buy_status = info.get('buy_status', 1) and buy_status
                             item_sell_status = info.get('sell_status', 1) and sell_status
                             is_active = (item_buy_status == 1 or item_sell_status == 1)
@@ -211,24 +202,14 @@ class ShirazSilverAPI:
                                 'id': silver_id,
                                 'title': info.get('title', 'محصول نقره'),
                                 'name': info.get('title', 'محصول نقره'),
-                                'buy_price_rial': buy_price_rial,
-                                'sell_price_rial': sell_price_rial,
                                 'buy_price': buy_price_toman,
                                 'sell_price': sell_price_toman,
-                                'buy_price_gheram': int(item.get('buy_price_gheram', 0)),
-                                'sell_price_gheram': int(item.get('sell_price_gheram', 0)),
-                                'change': float(info.get('change', 0)),
-                                'currency_group_title': info.get('currency_group_title', ''),
-                                'silver_type': info.get('silver_type', 0),
                                 'buy_status': item_buy_status,
                                 'sell_status': item_sell_status,
                                 'is_active': is_active,
-                                'status_text': 'فعال' if is_active else 'غیرفعال',
-                                'min_trade_value': item.get('min_trade_value', 0),
-                                'max_trade_value': item.get('max_trade_value', 0)
+                                'status_text': 'فعال' if is_active else 'غیرفعال'
                             }
                             
-                            # لاگ کردن محصولات غیرفعال
                             if not is_active:
                                 print(f"⚠️ محصول غیرفعال: {info.get('title')}")
                             
@@ -241,62 +222,14 @@ class ShirazSilverAPI:
                             'message': 'قیمت‌ها با موفقیت دریافت شد'
                         }
                     else:
-                        print("⚠️ آرایه قیمت‌ها خالی است")
-                        return {
-                            'success': False,
-                            'prices': [],
-                            'message': 'قیمت‌ها یافت نشد'
-                        }
+                        return {'success': False, 'prices': [], 'message': 'قیمت‌ها یافت نشد'}
                 else:
-                    return {
-                        'success': False,
-                        'prices': [],
-                        'message': data.get('message', 'خطا در دریافت قیمت‌ها')
-                    }
+                    return {'success': False, 'prices': [], 'message': data.get('message', 'خطا')}
             else:
-                return {
-                    'success': False,
-                    'prices': [],
-                    'message': f'خطای HTTP {response.status_code}'
-                }
+                return {'success': False, 'prices': [], 'message': f'خطای HTTP {response.status_code}'}
                 
         except Exception as e:
             print(f"❌ خطا در دریافت قیمت‌ها: {e}")
             import traceback
             traceback.print_exc()
-            return {
-                'success': False,
-                'prices': [],
-                'message': f'خطا: {str(e)}'
-            }
-
-
-# تست
-if __name__ == "__main__":
-    api = ShirazSilverAPI()
-    
-    # تست ارسال OTP
-    mobile = "09175398651"
-    result = api.send_otp(mobile)
-    print(f"\n📋 نتیجه send_otp: {result}")
-    
-    if result['success']:
-        code = input("\n🔢 کد دریافتی را وارد کنید: ")
-        
-        verify_result = api.verify_otp(mobile, code)
-        print(f"\n📋 نتیجه verify: {verify_result}")
-        
-        if verify_result['success']:
-            print("\n🎉 ورود موفق! حال دریافت قیمت‌ها...")
-            
-            prices_result = api.get_silver_prices()
-            print(f"\n📊 تعداد محصولات: {len(prices_result.get('prices', []))}")
-            
-            if prices_result['success']:
-                print(f"\n📋 نمایش 3 محصول اول:\n")
-                for i, price in enumerate(prices_result['prices'][:3], 1):
-                    print(f"{i}. {price['title']} - {price['status_text']}")
-                    print(f"   خرید: {price['buy_price']:,} تومان")
-                    print(f"   فروش: {price['sell_price']:,} تومان")
-                    print(f"   تغییر: {price['change']}%")
-                    print()
+            return {'success': False, 'prices': [], 'message': f'خطا: {str(e)}'}
